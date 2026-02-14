@@ -1,0 +1,104 @@
+/* assets/style.css - Кастомные стили поверх Bootstrap */
+body {
+    background-color: #f4f7f6;
+    font-family: 'Inter', 'Segoe UI', sans-serif; /* Более современный шрифт */
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.sidebar {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.post-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.post-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* --- СТИЛИ ДЛЯ ОТЗЫВОВ --- */
+
+/* Интерактивный рейтинг (звезды) */
+.rate {
+    float: left;
+    height: 46px;
+    padding: 0 10px;
+}
+.rate:not(:checked) > input {
+    position: absolute;
+    top: -9999px;
+}
+.rate:not(:checked) > label {
+    float: right;
+    width: 1em;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+    font-size: 30px;
+    color: #ccc;
+}
+.rate:not(:checked) > label:before {
+    content: '★ ';
+}
+.rate > input:checked ~ label {
+    color: #ffc700;
+}
+.rate:not(:checked) > label:hover,
+.rate:not(:checked) > label:hover ~ label {
+    color: #deb217;
+}
+.rate > input:checked + label:hover,
+.rate > input:checked + label:hover ~ label,
+.rate > input:checked ~ label:hover,
+.rate > input:checked ~ label:hover ~ label,
+.rate > label:hover ~ input:checked ~ label {
+    color: #c59b08;
+}
+
+/* Аватарка с инициалами */
+.avatar-initials {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    font-size: 18px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+/* Карточка отзыва */
+.comment-card {
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+.comment-card:hover {
+    background: #fffcf5; /* Легкий оттенок при наведении */
+}
+
+/* Ответ владельца */
+.owner-reply-box {
+    background-color: #f8f9fa;
+    border-left: 3px solid #198754;
+    border-radius: 0 8px 8px 0;
+}
