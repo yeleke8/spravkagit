@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3306
--- Время создания: Фев 14 2026 г., 16:23
+-- Время создания: Фев 14 2026 г., 20:09
 -- Версия сервера: 10.4.26-MariaDB
 -- Версия PHP: 7.2.34
 
@@ -190,28 +190,6 @@ CREATE TABLE `log_post_views` (
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `photos`
---
-
-CREATE TABLE `photos` (
-  `photo_id` int(11) UNSIGNED NOT NULL,
-  `post_id` int(11) NOT NULL,
-  `photo_url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Ссылка на фото',
-  `sort_order` int(11) DEFAULT 0 COMMENT 'Порядок сортировки'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Дамп данных таблицы `photos`
---
-
-INSERT INTO `photos` (`photo_id`, `post_id`, `photo_url`, `sort_order`) VALUES
-(1, 1, 'https://example.com/karavan1.jpg', 1),
-(2, 1, 'https://example.com/karavan2.jpg', 2),
-(3, 3, 'https://example.com/yassaui_back.jpg', 1);
-
--- --------------------------------------------------------
-
---
 -- Структура таблицы `post`
 --
 
@@ -240,18 +218,18 @@ CREATE TABLE `post` (
 --
 
 INSERT INTO `post` (`post_id`, `title`, `psevdonim`, `slug`, `description`, `address`, `worktime`, `photo`, `views`, `created_at`, `updated_at`, `status`, `rating_avg`, `rating_count`, `owner_id`, `attributes`, `contacts`) VALUES
-(1, 'Karavansaray Turkistan', 'karavansaray, каравансарай, керуенсарай, караван, туркестан, түркістан, karavan, caravan, керуен, сарай, сарайы, сарайда, шоу, аквашоу, театр, летающий, фонтаны, лодки, қайық, қайықтар, отель, қонақүй, трц, молл, mall, shopping, базар, рынок, дүкендер, дукендер, turkistan, turkestan, karavansarai, caravansaray, caravansary, летающийтеатр, алтынсамұрық, самрук, samruk, сушоуы, аквашоу', 'karavansaray', 'Уникальный туристический комплекс в восточном стиле. Здесь есть отели, рестораны, и проводится водное шоу. Отличное место для прогулок всей семьей.', 'пр. Б. Саттарханова, 20А', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-24:00\", \"sun\": \"closed\"}', 'https://avatars.mds.yandex.net/get-altay/4234257/2a00000177f727b549a92db6c354c5730ead/XXL', 1153, '2026-02-06 10:19:55', '2026-02-14 15:49:20', 1, '4.50', 2, 2, '{\"avg_check\": 8000, \"cuisine\": \"Восточная, Турецкая\", \"has_delivery\": 0, \"has_vip\": 1}', '{\"phone\": \"+7 (725) 333-33-33\", \"whatsapp\": \"87010000001\", \"instagram\": \"@karavansaray\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
-(2, 'Global Coffee', 'global, globalcoffee, глобал, кофе, кофейня, глобалкофе, глобал-кофе, коффе, кофи, coffi, coffe, coffee, coffeehouse, кофехана, кофеханасы, кофеханада, кофесі, кофеси, кофе-бар, кофебар, takeaway, кофешка, кафе, кафейня, бариста, глобалла, глобалға, глобалга, глобалда, латте, раф, капучино, айс, ice, салем, бра, bro', 'globalcoffee', 'Отличное место для завтраков и встречи с друзьями. Вкусный кофе, десерты и уютная атмосфера.', 'ул. Тауке хана, 15', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWA0w2D5Tbb6Dg7z_H08Of2RFV2wOiluhY1g&s', 85, '2026-02-06 10:19:55', '2026-02-14 15:44:20', 1, '4.00', 2, 2, '{\"avg_check\": 3500, \"cuisine\": \"Кофейня, Европейская\", \"has_delivery\": 1, \"has_vip\": 0}', '{\"phone\": \"+7 (777) 111-22-33\", \"whatsapp\": \"87771112233\", \"instagram\": \"@globalcoffee_turk\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
-(3, 'Мавзолей Ходжи Ахмеда Ясави', 'мавзолей, кесене, ясави, яссауи, ясауи, яссави, иассауи, иасауи, ходжа, қожа, кожа, ахмет, ахмед, ahmet, ahmed, yasawi, yassawi, yasavi, yassavi, yesevi, кесенесі, кесенеси, мавзолейі, мавзолейи, мазар, мазары, азрет, хазрет, хазірет, султан, түркістан, туркестан, turkistan, turkestan, зиярат, тәуап, мечеть, мешіт, mosque, tomb, shrine, комплекс, музей, иасави, иассави мешіт мешіті қыдыратын жер', 'hojaahmedyassaui', 'Главная достопримечательность Туркестана, объект всемирного наследия ЮНЕСКО. Священное место для паломников.', 'Центр города', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"closed\", \"sun\": \"closed\"}', 'https://tengrinews.kz/userdata/news/2024/news_549025/thumb_m/photo_487452.jpg', 501, '2026-02-06 10:19:55', '2026-02-14 15:50:11', 1, '5.00', 1, 2, NULL, '{\"phone\": \"-\", \"whatsapp\": \"-\", \"instagram\": \"-\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
-(4, 'Magnum Super', 'magnum, магнум, супермаркет, дүкен, дукен, магнүм, magnim, magnumm, magum, magnun, супер, маркет, магазин, продуктовый, гипермаркет, дүкені, дукени, супермаркеті, супермаркети, supermarket, market, shop, store, food, магнумда, магнумга, магнумка, магнумды, магнумнан, магнум-супер, magnumsuper, супермагнум', 'magnumsuper', 'Большой супермаркет с широким ассортиментом продуктов, бытовой химии и товаров для дома. Всегда свежие овощи и фрукты.', 'ул. Амира Тимура, 5', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://avatars.mds.yandex.net/get-altay/1132477/2a00000188b0ccc812c7648b319429fe3242/L_height', 120, '2026-02-06 10:19:55', '2026-02-14 15:42:59', 1, '4.00', 1, 2, NULL, '{\"phone\": \"+7 (725) 222-44-55\", \"whatsapp\": \"-\", \"instagram\": \"@magnum_kz\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
-(5, 'Rixos Turkistan', 'rixos, риксос, туркестан, түркістан, туркестан, туркістан, turkistan, turkestan, turkystan, riksos, rixsos, отель, гостиница, қонақүй, конакуй, қонақ, отельі, отели, resort, spa, спа, шипажай, демалыс, люкс, luxury, 5stars, 5звезд, риксоста, риксоска, туркестанда, туркестанга, туркистан, риксус, rixus, ryxos үй үйі переночевать', 'rixosturkestan', 'Роскошный отель с ресторанами высокой кухни, спа-центром и бассейном. Идеально для деловых встреч и отдыха.', 'пр. Б. Саттарханова, 1', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://cf.bstatic.com/xdata/images/hotel/max500/802682536.jpg?k=ddba355ccbfee3a08379f37b5e382d0816ddf3939487f0a3a6ec4727381bd484&o=&hp=1', 201, '2026-02-06 10:19:55', '2026-02-14 15:42:35', 1, '5.00', 1, 2, '{\"stars_count\": 5, \"check_in_time\": \"14:00\", \"check_out_time\": \"12:00\", \"breakfast_included\": 1}', '{\"phone\": \"+7 (725) 334-88-88\", \"whatsapp\": \"-\", \"instagram\": \"@rixosturkistan\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
+(1, 'Karavansaray Turkistan', 'karavansaray, каравансарай, керуенсарай, караван, туркестан, түркістан, karavan, caravan, керуен, сарай, сарайы, сарайда, шоу, аквашоу, театр, летающий, фонтаны, лодки, қайық, қайықтар, отель, қонақүй, трц, молл, mall, shopping, базар, рынок, дүкендер, дукендер, turkistan, turkestan, karavansarai, caravansaray, caravansary, летающийтеатр, алтынсамұрық, самрук, samruk, сушоуы, аквашоу', 'karavansaray', 'Уникальный туристический комплекс в восточном стиле. Здесь есть отели, рестораны, и проводится водное шоу. Отличное место для прогулок всей семьей.', 'пр. Б. Саттарханова, 20А', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-24:00\", \"sun\": \"closed\"}', 'https://avatars.mds.yandex.net/get-altay/4234257/2a00000177f727b549a92db6c354c5730ead/XXL', 1154, '2026-02-06 10:19:55', '2026-02-14 19:05:55', 1, '4.50', 2, 3, '{\"avg_check\": 8000, \"cuisine\": \"Восточная, Турецкая\", \"has_delivery\": 0, \"has_vip\": 1}', '{\"phone\": \"+7 (725) 333-33-33\", \"whatsapp\": \"87010000001\", \"instagram\": \"@karavansaray\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
+(2, 'Global Coffee', 'global, globalcoffee, глобал, кофе, кофейня, глобалкофе, глобал-кофе, коффе, кофи, coffi, coffe, coffee, coffeehouse, кофехана, кофеханасы, кофеханада, кофесі, кофеси, кофе-бар, кофебар, takeaway, кофешка, кафе, кафейня, бариста, глобалла, глобалға, глобалга, глобалда, латте, раф, капучино, айс, ice, салем, бра, bro', 'globalcoffee', 'Отличное место для завтраков и встречи с друзьями. Вкусный кофе, десерты и уютная атмосфера.', 'ул. Тауке хана, 15', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWA0w2D5Tbb6Dg7z_H08Of2RFV2wOiluhY1g&s', 86, '2026-02-06 10:19:55', '2026-02-14 19:20:27', 1, '4.00', 2, 3, '{\"avg_check\": 3500, \"cuisine\": \"Кофейня, Европейская\", \"has_delivery\": 1, \"has_vip\": 0}', '{\"phone\": \"+7 (777) 111-22-33\", \"whatsapp\": \"87771112233\", \"instagram\": \"@globalcoffee_turk\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
+(3, 'Мавзолей Ходжи Ахмеда Ясави', 'мавзолей, кесене, ясави, яссауи, ясауи, яссави, иассауи, иасауи, ходжа, қожа, кожа, ахмет, ахмед, ahmet, ahmed, yasawi, yassawi, yasavi, yassavi, yesevi, кесенесі, кесенеси, мавзолейі, мавзолейи, мазар, мазары, азрет, хазрет, хазірет, султан, түркістан, туркестан, turkistan, turkestan, зиярат, тәуап, мечеть, мешіт, mosque, tomb, shrine, комплекс, музей, иасави, иассави мешіт мешіті қыдыратын жер', 'hojaahmedyassaui', 'Главная достопримечательность Туркестана, объект всемирного наследия ЮНЕСКО. Священное место для паломников.', 'Центр города', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"closed\", \"sun\": \"closed\"}', 'https://tengrinews.kz/userdata/news/2024/news_549025/thumb_m/photo_487452.jpg', 505, '2026-02-06 10:19:55', '2026-02-14 20:05:35', 1, '5.00', 1, 2, NULL, '{\"phone\": \"-\", \"whatsapp\": \"-\", \"instagram\": \"-\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
+(4, 'Magnum Super', 'magnum, магнум, супермаркет, дүкен, дукен, магнүм, magnim, magnumm, magum, magnun, супер, маркет, магазин, продуктовый, гипермаркет, дүкені, дукени, супермаркеті, супермаркети, supermarket, market, shop, store, food, магнумда, магнумга, магнумка, магнумды, магнумнан, магнум-супер, magnumsuper, супермагнум', 'magnumsuper', 'Большой супермаркет с широким ассортиментом продуктов, бытовой химии и товаров для дома. Всегда свежие овощи и фрукты.', 'ул. Амира Тимура, 5', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://avatars.mds.yandex.net/get-altay/1132477/2a00000188b0ccc812c7648b319429fe3242/L_height', 121, '2026-02-06 10:19:55', '2026-02-14 19:05:21', 1, '4.00', 1, 2, NULL, '{\"phone\": \"+7 (725) 222-44-55\", \"whatsapp\": \"-\", \"instagram\": \"@magnum_kz\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
+(5, 'Rixos Turkistan', 'rixos, риксос, туркестан, түркістан, туркестан, туркістан, turkistan, turkestan, turkystan, riksos, rixsos, отель, гостиница, қонақүй, конакуй, қонақ, отельі, отели, resort, spa, спа, шипажай, демалыс, люкс, luxury, 5stars, 5звезд, риксоста, риксоска, туркестанда, туркестанга, туркистан, риксус, rixus, ryxos үй үйі переночевать', 'rixosturkestan', 'Роскошный отель с ресторанами высокой кухни, спа-центром и бассейном. Идеально для деловых встреч и отдыха.', 'пр. Б. Саттарханова, 1', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://cf.bstatic.com/xdata/images/hotel/max500/802682536.jpg?k=ddba355ccbfee3a08379f37b5e382d0816ddf3939487f0a3a6ec4727381bd484&o=&hp=1', 202, '2026-02-06 10:19:55', '2026-02-14 19:16:27', 1, '5.00', 1, 2, '{\"stars_count\": 5, \"check_in_time\": \"14:00\", \"check_out_time\": \"12:00\", \"breakfast_included\": 1}', '{\"phone\": \"+7 (725) 334-88-88\", \"whatsapp\": \"-\", \"instagram\": \"@rixosturkistan\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
 (6, 'Salam Bro', 'salam, salambro, саламбро, салам, бро, салаам, саламброу, salambrow, соламбро, саланбро, бургер, бургеры, burger, burgers, фастфуд, fastfood, еда, тамақ, тамак, дәмхана, дамхана, кафе, закусочная, халал, halal, халяль, халял, куры, крылышки, чикен, chicken, саламда, саламға, саламга, саламнан, лаваш тамақ', 'salambro', 'Популярная сеть фаст-фуда. Вкусные бургеры, хот-доги и наггетсы по доступным ценам.', 'мкр. Отрар, 10', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1fJUMeaT7bubgB7OeAbOYD9ZRHPdasGRhMA&s', 95, '2026-02-06 10:19:55', '2026-02-14 15:41:27', 0, '5.00', 1, 2, '{\"avg_check\": 1800, \"cuisine\": \"Фастфуд, Бургеры\", \"has_delivery\": 1, \"has_vip\": 0}', '{\"phone\": \"+7 (707) 999-88-77\", \"whatsapp\": \"87079998877\", \"instagram\": \"@salambro_turkestan\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
 (7, 'Sulpak', 'sulpak, сулпак, sulpag, сулпаг, sulbak, сулбак, solpak, солпак, slupak, сулпакк, sulpakk, сулпака, сулпаке, сулпакта, сулпақ, сулпақты, сулпақта, дүкен, дүкені, дукен, дукени, техника, электроника, электроникасы, магазин, бытовая, бытовка, быттехника, store, shop, market, electronic, техмаркет, сулпакка', 'sulpak', 'Магазин бытовой техники и электроники. Широкий выбор смартфонов, ноутбуков и телевизоров.', 'ТЦ Karavan', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://static-pano.maps.yandex.ru/v1/?panoid=1480818731_788211508_23_1703148932&size=500%2C240&azimuth=-28&tilt=10&api_key=maps&signature=QLI7VpiwBy0Kg3Mpf632nha2TVJd86hgZk814Vffw3o=', 60, '2026-02-06 10:19:55', '2026-02-14 15:40:54', 1, '2.00', 1, 2, NULL, '{\"phone\": \"3210\", \"whatsapp\": \"-\", \"instagram\": \"@sulpak\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
 (8, 'Парк Женис', 'жеңіс, женис, женіс, zhenis, jenis, genis, zhenys, jenys, zenis, zhenish, jenish, саябақ, саябағы, саябагы, саябак, саябакы, саябақта, саябаққа, парк, паркі, паркы, парке, парку, парка, park, parki, parky, sayabaq, sayabak, sayabagy, бағы, багы, сквер, бақы, бакы', 'parkzhenis', 'Зеленый парк в центре города с фонтанами и лавочками. Отличное место для вечерних прогулок.', 'ул. Есим хана', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'https://www.matritca.kz/uploads/posts/2021-06/1623744698_3fcf8a3c-e99c-42ef-8a62-58486c017076.jpg', 117, '2026-02-06 10:19:55', '2026-02-14 15:37:55', 1, '1.00', 1, 2, NULL, '{\"phone\": \"-\", \"whatsapp\": \"-\", \"instagram\": \"-\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
 (9, 'МКТУ им. Х. А. Ясави', 'мкту, iktu, ayu, ayü, ясави, яссави, ясауи, яссауи, иассауи, иасауи, иассави, иасави, yasawi, yassawi, yasavi, yassavi, yesevi, yesewi, iassawi, iasawi, университет, университеті, университети, универ, university, universitet, universiteti, ясавидің, яссауидің, яссауидін, ходжа, қожа, кожа, ахмет, ахмед, ahmet, ahmed, hoca, hodja', 'mktu-yasavi', 'Международный казахско-турецкий университет имени Ходжи Ахмеда Ясави. Первый вуз со статусом международного в Казахстане.', 'пр. Б. Саттарханова, 29', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'uploads/default.jpg', 0, '2026-02-11 09:30:53', '2026-02-14 15:55:50', 1, '0.00', 0, 2, '{\"status_type\": \"Международный университет\", \"has_grants\": 1, \"has_dormitory\": 1, \"degree_types\": \"Бакалавриат, Магистратура, Докторантура, Резидентура\", \"language_instruction\": \"Казахский, Русский, Английский, турецкий\", \"has_license\": 1}', '{\"phone\": \"+7 (72533) 3-33-33\", \"whatsapp\": \"\", \"instagram\": \"@ayu_edu_kz\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
-(10, 'Аптека Europharma', 'europharma, еврофарма, еурофарма, eurofarm, eurofarma, evropharma, evrofarma, еврофарм, еурофарм, эврофарма, эурофарма, еурфарма, дәріхана, дарихана, дәріханасы, дариханасы, аптека, аптеки, pharmacy, pharma, farm, europarma, ефрофарма, европарма, еуропарма, дәрі, дари, лекарства', 'europharma-1', NULL, 'ул. Кожанова, 12', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'uploads/default.jpg', 45, '2026-02-11 10:20:29', '2026-02-14 15:39:35', 1, '0.00', 0, 2, NULL, '{\"phone\": \"\", \"whatsapp\": \"\", \"instagram\": \"\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
-(11, 'Детский мир', 'детский, децкий, дедский, детскый, детски, мир, миры, мира, детмир, балалар, балаларга, балаларға, әлемі, алеми, алемы, әлеумет, дүкені, дукени, дүкен, дукен, магазин, магазині, магазини, detskiy, detskii, detmir, detsky, detckiy, balalar, alemi, alemy, duken, dukeni, shop, store, kids, baby', 'detskiy-mir', NULL, 'ТЦ Altyn Orda', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'uploads/default.jpg', 30, '2026-02-11 10:20:29', '2026-02-14 15:40:05', 1, '0.00', 0, 2, NULL, '{\"phone\": \"\", \"whatsapp\": \"\", \"instagram\": \"\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
-(12, 'Кинотеатр Cinema 3D', 'cinema, синема, 3d, 3д, кинотеатр, кинотеатры, кино, синима, cinima, kinema, sinema, триде, триди, киношка, кинозалы, кинотеатрында, кинотеатрына, movie, theater, theatre, film, синема3д, cinema3d, синемад, синема3, кинозал, экран, сеанс, билеты', 'cinema-3d', NULL, 'пр. Тауке Хана, 100', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'uploads/default.jpg', 150, '2026-02-11 10:20:29', '2026-02-14 15:40:31', 1, '0.00', 0, 2, NULL, '{\"phone\": \"\", \"whatsapp\": \"\", \"instagram\": \"\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}');
+(10, 'Аптека Europharma', 'europharma, еврофарма, еурофарма, eurofarm, eurofarma, evropharma, evrofarma, еврофарм, еурофарм, эврофарма, эурофарма, еурфарма, дәріхана, дарихана, дәріханасы, дариханасы, аптека, аптеки, pharmacy, pharma, farm, europarma, ефрофарма, европарма, еуропарма, дәрі, дари, лекарства', 'europharma-1', NULL, 'ул. Кожанова, 12', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'uploads/default.jpg', 46, '2026-02-11 10:20:29', '2026-02-14 19:43:50', 1, '0.00', 0, 2, NULL, '{\"phone\": \"\", \"whatsapp\": \"\", \"instagram\": \"\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
+(11, 'Детский мир', 'детский, децкий, дедский, детскый, детски, мир, миры, мира, детмир, балалар, балаларга, балаларға, әлемі, алеми, алемы, әлеумет, дүкені, дукени, дүкен, дукен, магазин, магазині, магазини, detskiy, detskii, detmir, detsky, detckiy, balalar, alemi, alemy, duken, dukeni, shop, store, kids, baby', 'detskiy-mir', NULL, 'ТЦ Altyn Orda', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'uploads/default.jpg', 31, '2026-02-11 10:20:29', '2026-02-14 19:30:19', 1, '0.00', 0, 2, NULL, '{\"phone\": \"\", \"whatsapp\": \"\", \"instagram\": \"\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}'),
+(12, 'Кинотеатр Cinema 3D', 'cinema, синема, 3d, 3д, кинотеатр, кинотеатры, кино, синима, cinima, kinema, sinema, триде, триди, киношка, кинозалы, кинотеатрында, кинотеатрына, movie, theater, theatre, film, синема3д, cinema3d, синемад, синема3, кинозал, экран, сеанс, билеты', 'cinema-3d', NULL, 'пр. Тауке Хана, 100', '{\"mon\": \"09:00-21:00\", \"tue\": \"09:00-21:00\", \"wed\": \"09:00-21:00\", \"thu\": \"09:00-21:00\", \"fri\": \"09:00-21:00\", \"sat\": \"10:00-18:00\", \"sun\": \"closed\"}', 'uploads/default.jpg', 151, '2026-02-11 10:20:29', '2026-02-14 19:46:38', 1, '0.00', 0, 2, NULL, '{\"phone\": \"\", \"whatsapp\": \"\", \"instagram\": \"\", \"maps\": {\"2gis\": \"\", \"yandex\": \"\"}}');
 
 -- --------------------------------------------------------
 
@@ -309,7 +287,9 @@ INSERT INTO `s_favorites` (`favorites_id`, `user_id`, `post_id`) VALUES
 (1, 1, 8),
 (2, 2, 1),
 (3, 2, 3),
-(4, 2, 5);
+(4, 2, 5),
+(6, 2, 11),
+(7, 2, 12);
 
 -- --------------------------------------------------------
 
@@ -406,8 +386,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`user_id`, `login`, `password`, `user_type`, `user_name`, `user_phone`, `registereddate`, `lastonline`) VALUES
 (1, 'user', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 1', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26'),
-(2, 'admin', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'admin', 'Админ', '+77011112233', '2026-02-11 10:20:18', '2026-02-14 15:13:55'),
-(3, 'owner', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'owner', 'Бизнесмен 1', '+77025556677', '2026-02-11 10:20:18', '2026-02-11 10:20:18'),
+(2, 'admin', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'admin', 'Админ', '+77011112233', '2026-02-11 10:20:18', '2026-02-14 19:15:26'),
+(3, 'owner', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'owner', 'Бизнесмен 1', '+77025556677', '2026-02-11 10:20:18', '2026-02-14 19:01:42'),
 (4, 'user2', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 2', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26'),
 (6, 'user3', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 3', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26');
 
@@ -439,13 +419,6 @@ ALTER TABLE `log_post_views`
   ADD PRIMARY KEY (`view_id`),
   ADD KEY `idx_post_date` (`post_id`,`viewed_at`),
   ADD KEY `fk_log_post_views_user` (`user_id`);
-
---
--- Индексы таблицы `photos`
---
-ALTER TABLE `photos`
-  ADD PRIMARY KEY (`photo_id`),
-  ADD KEY `post_id` (`post_id`);
 
 --
 -- Индексы таблицы `post`
@@ -517,12 +490,6 @@ ALTER TABLE `log_post_views`
   MODIFY `view_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT для таблицы `photos`
---
-ALTER TABLE `photos`
-  MODIFY `photo_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
 -- AUTO_INCREMENT для таблицы `post`
 --
 ALTER TABLE `post`
@@ -532,7 +499,7 @@ ALTER TABLE `post`
 -- AUTO_INCREMENT для таблицы `s_favorites`
 --
 ALTER TABLE `s_favorites`
-  MODIFY `favorites_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `favorites_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT для таблицы `tags`
@@ -569,12 +536,6 @@ ALTER TABLE `comments`
 ALTER TABLE `log_post_views`
   ADD CONSTRAINT `fk_log_post_views_post` FOREIGN KEY (`post_id`) REFERENCES `post` (`post_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_log_post_views_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
-
---
--- Ограничения внешнего ключа таблицы `photos`
---
-ALTER TABLE `photos`
-  ADD CONSTRAINT `post_photos_fk` FOREIGN KEY (`post_id`) REFERENCES `post` (`post_id`) ON DELETE CASCADE;
 
 --
 -- Ограничения внешнего ключа таблицы `post`

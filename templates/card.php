@@ -18,15 +18,18 @@
                 </span>
             </div>
 
-            <?php if(is_logged_in() && $_SESSION['user_type'] === 'user'): 
+            <?php 
+            // Проверяем, в избранном ли (безопасно, если пользователь не вошел)
+            $isFav = false;
+            if(is_logged_in() && isset($myFavs)) {
                 $isFav = in_array($post['post_id'], $myFavs);
+            }
             ?>
             <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-3 rounded-circle shadow-sm border-0 btn-favorite" 
                     data-id="<?= $post['post_id'] ?>" 
                     title="<?= $isFav ? 'Убрать из избранного' : 'В избранное' ?>">
                 <i class="<?= $isFav ? 'fa-solid' : 'fa-regular' ?> fa-heart text-danger"></i>
             </button>
-            <?php endif; ?>
         </div>
 
         <div class="card-body d-flex flex-column p-4">
@@ -42,7 +45,7 @@
                 <?= h(mb_strimwidth($post['address'], 0, 40, "...")) ?>
             </p>
 
-            <!-- Статус работы в карточке -->
+            <!-- Статус работы -->
             <?php if(!empty($post['worktime'])):
                 $status = getWorkStatus($post['worktime']);
             ?>
@@ -57,11 +60,7 @@
                 <?php 
                 $rating = round($post['rating_avg']); 
                 for ($i = 1; $i <= 5; $i++) {
-                    if ($i <= $rating) {
-                        echo '<i class="fa-solid fa-star"></i>';
-                    } else {
-                        echo '<i class="fa-regular fa-star text-secondary opacity-25"></i>';
-                    }
+                    echo ($i <= $rating) ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star text-secondary opacity-25"></i>';
                 }
                 ?>
                 <span class="text-muted ms-1 small">(<?= $post['rating_count'] ?>)</span>

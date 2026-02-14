@@ -1,12 +1,14 @@
 <?php
+// ajax-favorite.php - Обработчик избранного
 require_once 'back/db.php';
 require_once 'back/functions.php';
 
 header('Content-Type: application/json');
 
-// 1. Проверки доступа
+// 1. Если пользователь не авторизован
 if (!is_logged_in()) {
-    echo json_encode(['status' => 'error', 'message' => 'Нужна авторизация']);
+    // Возвращаем специальный статус, чтобы JS знал, что нужно перенаправить на логин
+    echo json_encode(['status' => 'login_required', 'message' => 'Сначала войдите в систему']);
     exit;
 }
 
@@ -27,7 +29,7 @@ if (!$post_id) {
 $user_id = $_SESSION['user_id'];
 
 try {
-    // 3. Проверяем, есть ли уже в избранном
+    // 3. Проверяем наличие в базе
     $stmt = $pdo->prepare("SELECT favorites_id FROM s_favorites WHERE user_id = ? AND post_id = ?");
     $stmt->execute([$user_id, $post_id]);
     $exists = $stmt->fetch();
@@ -37,7 +39,7 @@ try {
         $pdo->prepare("DELETE FROM s_favorites WHERE user_id = ? AND post_id = ?")->execute([$user_id, $post_id]);
         $action = 'removed';
     } else {
-        // Добавляем (используем IGNORE на случай гонки запросов, так как в базе стоит UNIQUE ключ)
+        // Добавляем (IGNORE на всякий случай)
         $pdo->prepare("INSERT IGNORE INTO s_favorites (user_id, post_id) VALUES (?, ?)")->execute([$user_id, $post_id]);
         $action = 'added';
     }
@@ -45,5 +47,7 @@ try {
     echo json_encode(['status' => 'success', 'action' => $action]);
 
 } catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Ошибка БД']);
+    // В продакшене лучше писать в лог, а юзеру отдавать общее сообщение
+    echo json_encode(['status' => 'error', 'message' => 'Ошибка базы данных']);
 }
+?>

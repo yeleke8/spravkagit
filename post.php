@@ -1,5 +1,5 @@
 <?php
-// post.php - Детальная страница заведения (Bootstrap Standard)
+// post.php - Детальная страница заведения
 require_once 'templates/header.php';
 require_once 'templates/sidebar.php';
 
@@ -23,9 +23,7 @@ if (!isset($_SESSION['viewed_posts'][$post['post_id']])) {
 }
 
 // 2. Доп данные
-$stmtPhotos = $pdo->prepare("SELECT * FROM photos WHERE post_id = ? ORDER BY sort_order ASC");
-$stmtPhotos->execute([$post['post_id']]);
-$photos = $stmtPhotos->fetchAll();
+// --- УДАЛЕНО: Запрос к таблице photos ---
 
 $stmtTags = $pdo->prepare("SELECT t.* FROM tags t JOIN s_tags st ON t.attr_id = st.attr_id WHERE st.post_id = ?");
 $stmtTags->execute([$post['post_id']]);
@@ -45,6 +43,15 @@ $stmtComments = $pdo->prepare("
 ");
 $stmtComments->execute([$post['post_id']]);
 $comments = $stmtComments->fetchAll();
+
+// --- Гарантированная загрузка избранного ---
+if (is_logged_in() && !isset($myFavs)) {
+    $stmtF = $pdo->prepare("SELECT post_id FROM s_favorites WHERE user_id = ?");
+    $stmtF->execute([$_SESSION['user_id']]);
+    $myFavs = $stmtF->fetchAll(PDO::FETCH_COLUMN);
+} else if (!is_logged_in()) {
+    $myFavs = [];
+}
 
 $userHasReview = false;
 if (is_logged_in()) {
@@ -70,30 +77,16 @@ if (is_logged_in()) {
 </nav>
 
 <div class="card shadow-sm mb-4">
-    <!-- Carousel -->
-    <div id="carouselGallery" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            <div class="carousel-item active">
-                <img src="<?= h($post['photo']) ?>" class="d-block w-100" style="height: 400px; object-fit: cover;" alt="Main">
-                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-75 rounded p-3">
-                    <h2 class="h3 mb-1"><?= h($post['title']) ?></h2>
-                    <p class="mb-0 small"><i class="fa-solid fa-location-dot"></i> <?= h($post['address']) ?></p>
-                </div>
-            </div>
-            <?php foreach($photos as $photo): ?>
-            <div class="carousel-item">
-                <img src="<?= h($photo['photo_url']) ?>" class="d-block w-100" style="height: 400px; object-fit: cover;" alt="Photo">
-            </div>
-            <?php endforeach; ?>
+    <!-- Main Photo (Carousel removed as photos table is gone) -->
+    <div class="position-relative">
+        <img src="<?= h($post['photo']) ?>" class="d-block w-100" style="height: 400px; object-fit: cover;" alt="Main Photo">
+        <!-- Caption Overlay -->
+        <div class="position-absolute bottom-0 start-0 w-100 p-3 d-none d-md-block">
+             <div class="bg-dark bg-opacity-75 rounded p-3 text-white">
+                <h2 class="h3 mb-1"><?= h($post['title']) ?></h2>
+                <p class="mb-0 small"><i class="fa-solid fa-location-dot"></i> <?= h($post['address']) ?></p>
+             </div>
         </div>
-        <?php if(count($photos) > 0): ?>
-            <button class="carousel-control-prev" type="button" data-bs-target="#carouselGallery" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#carouselGallery" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            </button>
-        <?php endif; ?>
     </div>
 
     <div class="card-body">
@@ -262,14 +255,16 @@ if (is_logged_in()) {
                 </ul>
 
                 <div class="d-grid gap-2">
-                    <?php if(is_logged_in() && $_SESSION['user_type'] === 'user'): 
-                        $isFav = in_array($post['post_id'], $myFavs);
+                    <?php 
+                        $isFav = false;
+                        if(is_logged_in() && isset($myFavs)) {
+                            $isFav = in_array($post['post_id'], $myFavs);
+                        }
                     ?>
-                        <button class="btn <?= $isFav ? 'btn-danger' : 'btn-outline-danger' ?> btn-favorite" data-id="<?= $post['post_id'] ?>">
-                            <i class="<?= $isFav ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i> 
-                            <span class="btn-text"><?= $isFav ? 'В избранном' : 'В избранное' ?></span>
-                        </button>
-                    <?php endif; ?>
+                    <button type="button" id="favButton" class="btn <?= $isFav ? 'btn-danger' : 'btn-outline-danger' ?> btn-favorite" data-id="<?= $post['post_id'] ?>">
+                        <i class="<?= $isFav ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i> 
+                        <span class="btn-text"><?= $isFav ? 'В избранном' : 'В избранное' ?></span>
+                    </button>
 
                     <?php if(is_logged_in() && ($_SESSION['user_type'] === 'admin' || ($_SESSION['user_type'] === 'owner' && $post['owner_id'] == $_SESSION['user_id']))): ?>
                         <a href="edit.php?id=<?= $post['post_id'] ?>" class="btn btn-secondary"><i class="fa-solid fa-pen"></i> Редактировать</a>
@@ -301,6 +296,63 @@ if (is_logged_in()) {
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('favButton');
+    
+    if (btn) {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            this.style.transform = "scale(0.9)";
+            setTimeout(() => this.style.transform = "scale(1)", 150);
+
+            const postId = this.getAttribute('data-id');
+            const icon = this.querySelector('i');
+            const textSpan = this.querySelector('.btn-text');
+
+            try {
+                let response = await fetch('ajax-favorite.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json;charset=utf-8'},
+                    body: JSON.stringify({id: postId})
+                });
+
+                let result = await response.json();
+
+                if (result.status === 'success') {
+                    if (result.action === 'added') {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid');
+                        this.classList.remove('btn-outline-danger');
+                        this.classList.add('btn-danger');
+                        if(textSpan) textSpan.textContent = 'В избранном';
+                    } else {
+                        icon.classList.remove('fa-solid');
+                        icon.classList.add('fa-regular');
+                        this.classList.remove('btn-danger');
+                        this.classList.add('btn-outline-danger');
+                        if(textSpan) textSpan.textContent = 'В избранное';
+                    }
+                } else if (result.status === 'login_required' || result.message === 'Нужна авторизация') {
+                    window.location.href = 'login.php';
+                } else {
+                    console.error('Ошибка сервера:', result);
+                }
+            } catch (err) {
+                console.error('Ошибка запроса:', err);
+                if(!<?php echo is_logged_in() ? 'true' : 'false'; ?>) {
+                      window.location.href = 'login.php';
+                }
+            }
+        });
+    }
+});
+</script>
 
 <?php 
 echo '</div>';
