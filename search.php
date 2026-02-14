@@ -66,16 +66,26 @@ if (mb_strlen($q) < 2 && $cat_id == 0) {
 
     // Условие по тексту (если есть)
     if (!empty($q)) {
-        // Разбиваем запрос на слова для поиска совпадений по частям (AND логика)
-        $words = explode(' ', $q);
-        $words = array_filter($words, function($w) { return trim($w) !== ''; });
+        // 1. Очищаем строку от спецсимволов, оставляем буквы и цифры
+        $cleanQ = preg_replace('/[^\p{L}\p{N}\s]/u', '', $q);
+        
+        // 2. Разбиваем на слова
+        $words = explode(' ', $cleanQ);
+        $words = array_filter($words, function($w) { return mb_strlen(trim($w)) > 1; }); // Игнорируем буквы-одиночки
 
-        foreach ($words as $word) {
-            $word = trim($word);
-            // Каждое слово должно встречаться или в названии, или в псевдониме
-            $sql .= "AND (p.title LIKE ? OR p.psevdonim LIKE ?) ";
-            $params[] = "%$word%";
-            $params[] = "%$word%";
+        if (!empty($words)) {
+            // 3. Формируем строку для BOOLEAN MODE
+            // Добавляем '+' (обязательно) и '*' (частичное совпадение) к каждому слову
+            // Пример: из "кофе центр" делаем "+кофе* +центр*"
+            $booleanQuery = '';
+            foreach ($words as $word) {
+                $booleanQuery .= '+' . trim($word) . '* ';
+            }
+
+            // 4. Используем полнотекстовый поиск
+            // Важно: в базе индекс называется 'title', он включает поля title и psevdonim
+            $sql .= "AND MATCH(p.title, p.psevdonim) AGAINST(? IN BOOLEAN MODE) ";
+            $params[] = trim($booleanQuery);
         }
     }
 

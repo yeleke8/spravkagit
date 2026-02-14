@@ -262,8 +262,13 @@ if (is_logged_in()) {
                 </ul>
 
                 <div class="d-grid gap-2">
-                    <?php if(is_logged_in() && $_SESSION['user_type'] === 'user'): ?>
-                        <button class="btn btn-outline-danger"><i class="fa-regular fa-heart"></i> В избранное</button>
+                    <?php if(is_logged_in() && $_SESSION['user_type'] === 'user'): 
+                        $isFav = in_array($post['post_id'], $myFavs);
+                    ?>
+                        <button class="btn <?= $isFav ? 'btn-danger' : 'btn-outline-danger' ?> btn-favorite" data-id="<?= $post['post_id'] ?>">
+                            <i class="<?= $isFav ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i> 
+                            <span class="btn-text"><?= $isFav ? 'В избранном' : 'В избранное' ?></span>
+                        </button>
                     <?php endif; ?>
 
                     <?php if(is_logged_in() && ($_SESSION['user_type'] === 'admin' || ($_SESSION['user_type'] === 'owner' && $post['owner_id'] == $_SESSION['user_id']))): ?>

@@ -7,6 +7,13 @@ require_once __DIR__ . '/../back/functions.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+// Получаем список ID избранного для текущего пользователя
+$myFavs = [];
+if (is_logged_in()) {
+    $stmtFavs = $pdo->prepare("SELECT post_id FROM s_favorites WHERE user_id = ?");
+    $stmtFavs->execute([$_SESSION['user_id']]);
+    $myFavs = $stmtFavs->fetchAll(PDO::FETCH_COLUMN);
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru" class="h-100">

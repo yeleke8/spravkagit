@@ -18,9 +18,13 @@
                 </span>
             </div>
 
-            <?php if(is_logged_in() && $_SESSION['user_type'] === 'user'): ?>
-            <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-3 rounded-circle shadow-sm text-danger border-0" title="В избранное">
-                <i class="fa-regular fa-heart"></i>
+            <?php if(is_logged_in() && $_SESSION['user_type'] === 'user'): 
+                $isFav = in_array($post['post_id'], $myFavs);
+            ?>
+            <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-3 rounded-circle shadow-sm border-0 btn-favorite" 
+                    data-id="<?= $post['post_id'] ?>" 
+                    title="<?= $isFav ? 'Убрать из избранного' : 'В избранное' ?>">
+                <i class="<?= $isFav ? 'fa-solid' : 'fa-regular' ?> fa-heart text-danger"></i>
             </button>
             <?php endif; ?>
         </div>
