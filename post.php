@@ -15,12 +15,41 @@ if (!$post) {
     exit;
 }
 
-// 1. Увеличиваем просмотры
-if (!isset($_SESSION['viewed_posts'][$post['post_id']])) {
-    $pdo->prepare("UPDATE post SET views = views + 1 WHERE post_id = ?")->execute([$post['post_id']]);
-    $_SESSION['viewed_posts'][$post['post_id']] = true;
-    $post['views']++;
+// 1. ЛОГИКА ПРОСМОТРОВ (Через БД)
+// Получаем реальный IP
+$userIp = getRealIp();
+// Конвертируем IP в бинарный формат для типа поля varbinary(16)
+$userIpBin = inet_pton($userIp); 
+$currentUserId = is_logged_in() ? $_SESSION['user_id'] : null;
+
+// Проверяем, был ли просмотр с этого IP для этого поста за последние 24 часа
+$stmtCheckView = $pdo->prepare("
+    SELECT view_id FROM log_post_views 
+    WHERE post_id = ? 
+    AND ip_address = ? 
+    AND viewed_at > (NOW() - INTERVAL 5 MINUTE)
+");
+$stmtCheckView->execute([$post['post_id'], $userIpBin]);
+
+if (!$stmtCheckView->fetch()) {
+    // Если просмотра не было за последние 5 минут:
+    try {
+        // 1. Добавляем запись в лог
+        $stmtInsertLog = $pdo->prepare("INSERT INTO log_post_views (post_id, user_id, ip_address) VALUES (?, ?, ?)");
+        $stmtInsertLog->execute([$post['post_id'], $currentUserId, $userIpBin]);
+
+        // 2. Увеличиваем счетчик в самой таблице post
+        $pdo->prepare("UPDATE post SET views = views + 1 WHERE post_id = ?")->execute([$post['post_id']]);
+        
+        // 3. Обновляем переменную $post, чтобы пользователь сразу увидел изменение
+        $post['views']++;
+        
+    } catch (PDOException $e) {
+        // Игнорируем ошибки логирования, чтобы не ломать страницу
+        // error_log("View log error: " . $e->getMessage());
+    }
 }
+
 
 // 2. Доп данные
 // --- УДАЛЕНО: Запрос к таблице photos ---

@@ -1,86 +1,126 @@
-<div class="col-md-6 col-lg-4 mb-4">
-    <div class="card post-card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
+<?php
+// Распаковка JSON атрибутов для доп. информации
+$attrs = isset($post['attributes']) ? json_decode($post['attributes'], true) : [];
+
+// 1. Логика для уровня цен (₸, ₸₸, ₸₸₸)
+$priceLevel = '';
+if (isset($attrs['avg_check'])) {
+    $check = (int)$attrs['avg_check'];
+    if ($check > 0) {
+        if ($check <= 2500) $priceSym = '₸';
+        elseif ($check <= 7000) $priceSym = '₸₸';
+        else $priceSym = '₸₸₸';
         
-        <div class="position-relative">
-            <a href="post.php?slug=<?= h($post['slug']) ?>" class="d-block">
-                <img src="<?= h($post['photo']) ?>" class="card-img-top" alt="<?= h($post['title']) ?>" style="height: 220px; object-fit: cover;">
-            </a>
+        $priceLevel = '<span class="badge bg-light text-dark border fw-normal me-1" title="Средний чек: ~'.$check.'">' . $priceSym . '</span>';
+    }
+}
+
+// 2. Логика для звезд отеля
+$hotelStars = '';
+if (isset($attrs['stars_count']) && $attrs['stars_count'] > 0) {
+    $hotelStars = '<span class="text-warning small me-1">' . str_repeat('<i class="fa-solid fa-star"></i>', $attrs['stars_count']) . '</span>';
+}
+
+// 3. Дополнительный тег (Кухня или Тип)
+$extraTag = '';
+if (isset($attrs['cuisine'])) {
+    // Берем первое слово (например "Европейская, Итальянская" -> "Европейская")
+    $cuisineParts = explode(',', $attrs['cuisine']);
+    $extraTag = '<span class="text-muted small border-start ps-2 ms-1">' . h(trim($cuisineParts[0])) . '</span>';
+}
+?>
+
+<div class="col-md-6 col-lg-4 mb-4">
+    <div class="card h-100 border-0 shadow-sm rounded-4 position-relative bg-white" style="transition: transform 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;">
+        <div class="card-body p-3 d-flex flex-column">
             
-            <div class="position-absolute top-0 start-0 m-3">
-                <?php 
-                $ratingColor = 'bg-secondary';
-                if ($post['rating_avg'] >= 4.5) $ratingColor = 'bg-success';
-                elseif ($post['rating_avg'] >= 3.5) $ratingColor = 'bg-warning text-dark';
-                elseif ($post['rating_avg'] > 0) $ratingColor = 'bg-danger';
-                ?>
-                <span class="badge <?= $ratingColor ?> shadow-sm">
-                    <?= number_format($post['rating_avg'], 1) ?> <i class="fa-solid fa-star"></i>
-                </span>
-            </div>
-
-            <?php 
-            // Проверяем, в избранном ли (безопасно, если пользователь не вошел)
-            $isFav = false;
-            if(is_logged_in() && isset($myFavs)) {
-                $isFav = in_array($post['post_id'], $myFavs);
-            }
-            ?>
-            <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-3 rounded-circle shadow-sm border-0 btn-favorite" 
-                    data-id="<?= $post['post_id'] ?>" 
-                    title="<?= $isFav ? 'Убрать из избранного' : 'В избранное' ?>">
-                <i class="<?= $isFav ? 'fa-solid' : 'fa-regular' ?> fa-heart text-danger"></i>
-            </button>
-        </div>
-
-        <div class="card-body d-flex flex-column p-4">
-            
-            <h5 class="card-title fw-bold mb-1">
-                <a href="post.php?slug=<?= h($post['slug']) ?>" class="text-dark text-decoration-none stretched-link">
-                    <?= h($post['title']) ?>
-                </a>
-            </h5>
-
-            <p class="text-muted small mb-2">
-                <i class="fa-solid fa-location-dot text-primary me-1"></i>
-                <?= h(mb_strimwidth($post['address'], 0, 40, "...")) ?>
-            </p>
-
-            <!-- Статус работы -->
-            <?php if(!empty($post['worktime'])):
-                $status = getWorkStatus($post['worktime']);
-            ?>
-                <div class="mb-2 small">
-                    <span class="badge bg-<?= $status['color'] ?> bg-opacity-10 text-<?= $status['color'] ?> border border-<?= $status['color'] ?>">
-                        <?= $status['text'] ?>
-                    </span>
+            <!-- ВЕРХНИЙ БЛОК: Основная инфа -->
+            <div class="d-flex mb-3">
+                <!-- Фото (Квадрат со скруглением) -->
+                <div class="flex-shrink-0 position-relative">
+                    <a href="post.php?slug=<?= h($post['slug']) ?>">
+                        <img src="<?= h($post['photo']) ?>" alt="<?= h($post['title']) ?>" 
+                             class="rounded-4 bg-light shadow-sm" 
+                             style="width: 80px; height: 80px; object-fit: cover;">
+                    </a>
+                    <!-- Рейтинг поверх фото (как уведомление) -->
+                    <?php if($post['rating_avg'] > 0): ?>
+                        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-1 bg-white bg-opacity-90 backdrop-blur rounded-pill px-2 py-0 border shadow-sm" style="font-size: 0.7rem; white-space: nowrap;">
+                            <i class="fa-solid fa-star text-warning"></i> <b><?= number_format($post['rating_avg'], 1) ?></b>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
 
-            <div class="mb-3 text-warning small">
+                <!-- Текстовая часть -->
+                <div class="ms-3 flex-grow-1 overflow-hidden d-flex flex-column justify-content-center">
+                    
+                    <!-- Звезды отеля (если есть) -->
+                    <?php if($hotelStars): ?>
+                        <div class="mb-0 lh-1"><?= $hotelStars ?></div>
+                    <?php endif; ?>
+
+                    <h6 class="fw-bold mb-1 text-truncate fs-6 text-dark">
+                        <a href="post.php?slug=<?= h($post['slug']) ?>" class="text-dark text-decoration-none stretched-link">
+                            <?= h($post['title']) ?>
+                        </a>
+                    </h6>
+                    
+                    <p class="text-muted small mb-1 text-truncate opacity-75">
+                        <i class="fa-solid fa-location-dot me-1 text-primary opacity-50"></i>
+                        <?= h($post['address']) ?>
+                    </p>
+
+                    <!-- Цена и Тип -->
+                    <div class="d-flex align-items-center small">
+                        <?= $priceLevel ?>
+                        <?= $extraTag ?>
+                    </div>
+                </div>
+
+                <!-- Кнопка Like (абсолютно справа) -->
                 <?php 
-                $rating = round($post['rating_avg']); 
-                for ($i = 1; $i <= 5; $i++) {
-                    echo ($i <= $rating) ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star text-secondary opacity-25"></i>';
+                $isFav = false;
+                if(is_logged_in() && isset($myFavs)) {
+                    $isFav = in_array($post['post_id'], $myFavs);
                 }
                 ?>
-                <span class="text-muted ms-1 small">(<?= $post['rating_count'] ?>)</span>
+                <button class="btn btn-link p-0 ms-1 btn-favorite position-relative z-2 text-decoration-none align-self-start" 
+                        data-id="<?= $post['post_id'] ?>" 
+                        style="width: 24px; height: 24px;">
+                    <i class="<?= $isFav ? 'fa-solid text-danger' : 'fa-regular text-muted opacity-50' ?> fa-heart fa-lg hover-scale"></i>
+                </button>
             </div>
 
-            <p class="card-text text-secondary small flex-grow-1" style="line-height: 1.6;">
-                <?= h(mb_strimwidth($post['description'], 0, 100, "...")) ?>
-            </p>
-        </div>
+            <!-- "ПЕРФОРАЦИЯ" (Разделитель билета) -->
+            <div class="position-relative w-100 my-2">
+                <hr class="border-top border-secondary border-opacity-25 border-dashed m-0">
+                <!-- Декоративные полукруги по бокам (имитация отрыва) -->
+                <div class="position-absolute top-50 start-0 translate-middle bg-light rounded-circle" style="width: 16px; height: 16px; margin-left: -16px;"></div> <!-- margin-left отрицательный, чтобы "выесть" кусок -->
+                <div class="position-absolute top-50 end-0 translate-middle bg-light rounded-circle" style="width: 16px; height: 16px; margin-right: -32px;"></div> <!-- Нужно корректировать под фон -->
+            </div>
 
-        <div class="card-footer bg-white border-0 px-4 pb-4 pt-0">
-            <div class="d-flex justify-content-between align-items-center">
-                <small class="text-muted">
-                    <i class="fa-regular fa-eye"></i> <?= $post['views'] ?>
+            <!-- НИЖНИЙ БЛОК: Статусы -->
+            <div class="d-flex justify-content-between align-items-center mt-1">
+                
+                <!-- Просмотры -->
+                <small class="text-muted" style="font-size: 0.75rem;">
+                    <i class="fa-regular fa-eye me-1 opacity-50"></i> <?= $post['views'] ?>
                 </small>
-                <span class="text-primary fw-bold small text-uppercase">
-                    Подробнее <i class="fa-solid fa-arrow-right ms-1"></i>
-                </span>
-            </div>
-        </div>
 
+                <!-- Статус работы -->
+                <?php if(!empty($post['worktime'])):
+                    $status = getWorkStatus($post['worktime']);
+                    $dotColor = $status['status'] === 'open' ? 'success' : 'danger';
+                    $statusText = $status['status'] === 'open' ? 'Открыто' : 'Закрыто';
+                ?>
+                    <div class="d-flex align-items-center bg-light rounded-pill px-2 py-1 border border-light">
+                        <span class="d-inline-block rounded-circle bg-<?= $dotColor ?> me-2" style="width: 6px; height: 6px;"></span>
+                        <span class="small fw-medium text-secondary" style="font-size: 0.75rem;"><?= $statusText ?></span>
+                    </div>
+                <?php endif; ?>
+
+            </div>
+
+        </div>
     </div>
 </div>
