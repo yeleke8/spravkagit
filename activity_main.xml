@@ -2,373 +2,349 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
-    tools:context=".MainActivity">
+    android:background="#121212"
+    android:padding="16dp">
 
-    <!-- === 1. СОЛ ЖАҚ БҮЙІР ПАНЕЛІ (SIDEBAR) === -->
+    <!-- ЖОҒАРҒЫ БӨЛІК: ҚОСУ ЖӘНЕ СТАТУС -->
     <LinearLayout
-        android:id="@+id/sidebar"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#1A1A1A"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingVertical="32dp"
-        android:elevation="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:id="@+id/headerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         app:layout_constraintTop_toTopOf="parent">
 
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Статус: Өшіп тұр"
+            android:textColor="#BB86FC"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
 
-
+        <ImageButton
+            android:id="@+id/btnPower"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_power"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#03DAC5"
+            android:contentDescription="Connect"/>
     </LinearLayout>
 
-    <!-- === 2. НЕГІЗГІ КОНТЕНТ (30% БЛОК + 70% КАРТА) === -->
-    <LinearLayout
-        android:id="@+id/content_area"
-        android:layout_width="0dp"
+    <!-- ДЫБЫСТЫ ӨШІРУ БАТЫРМАСЫ -->
+    <Button
+        android:id="@+id/btnMuteAlert"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ДАБЫЛДЫ ӨШІРУ 🔇"
+        android:backgroundTint="#CF6679"
+        android:textColor="#000000"
+        android:visibility="gone"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/headerContainer"
+        tools:visibility="visible"/>
+
+    <!-- НЕГІЗГІ ТІЗІМ (SCROLLVIEW) -->
+    <ScrollView
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:weightSum="1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/sidebar"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintTop_toBottomOf="@id/btnMuteAlert"
+        app:layout_constraintBottom_toTopOf="@id/btnHistory">
 
-        <!-- === А) 30% АҚПАРАТТЫҚ ПАНЕЛЬ (ПЛЕЕР + ТІЗІМ) === -->
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginEnd="16dp">
+            android:divider="?android:dividerHorizontal"
+            android:showDividers="middle">
 
-            <!-- 1. МУЗЫКА ПЛЕЕРІ (КАРТОЧКА) -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="#252525">
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <!-- Альбом суреті / Фон (Градиент) -->
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:src="@drawable/music_2"
-                        android:scaleType="centerCrop"
-                        android:alpha="0.4"/>
-
-                    <!-- Ән аты -->
-                    <TextView
-                        android:id="@+id/music_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Let It Happen"
-                        android:textColor="@color/text_primary"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:layout_marginStart="24dp"
-                        android:layout_marginTop="24dp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"/>
-
-                    <!-- Орындаушы -->
-                    <TextView
-                        android:id="@+id/music_artist"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Tame Impala"
-                        android:textColor="#B3FFFFFF"
-                        android:textSize="16sp"
-                        android:layout_marginTop="4dp"
-                        app:layout_constraintStart_toStartOf="@id/music_title"
-                        app:layout_constraintTop_toBottomOf="@id/music_title"/>
-
-                    <!-- Басқару батырмалары -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="24dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent">
-
-                        <!-- Артқа -->
-                        <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:src="@drawable/prev"
-                            app:tint="@color/text_primary"/>
-
-                        <!-- Ойнату (Play) - Циан түсті дөңгелек -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
-                            android:layout_marginHorizontal="24dp"
-                            app:cardCornerRadius="32dp"
-                            app:cardBackgroundColor="#00E5FF"
-                            app:cardElevation="8dp">
-                            <ImageView
-                                android:id="@+id/btn_map_mode"
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/play"
-                                app:tint="@color/black"/>
-                        </androidx.cardview.widget.CardView>
-
-                        <!-- Алға -->
-                        <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:src="@drawable/next"
-                            app:tint="@color/text_primary"/>
-                    </LinearLayout>
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Аралық -->
-            <View android:layout_width="match_parent" android:layout_height="16dp"/>
-
-            <!-- 2. ФУНКЦИОНАЛДЫ БАТЫРМАЛАР (ТІЗІМ) -->
+            <!-- 1. ЖЫЛДАМДЫҚ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <!-- 1-блок: Камера (Қызғылт) -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="80dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardBackgroundColor="#252525"
-                    app:cardElevation="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="16dp">
-
-                        <!-- Иконка фоны -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            app:cardCornerRadius="24dp"
-                            app:cardBackgroundColor="#FF8A80">
-                            <ImageView
-
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/sun"
-                                app:tint="@color/black"/>
-                        </androidx.cardview.widget.CardView>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <TextView
-                                android:text="Car Camera"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:textColor="@color/text_primary"
-                                android:textStyle="bold"
-                                android:textSize="16sp"/>
-                            <TextView
-                                android:text="Show camera feed"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:textColor="#80FFFFFF"
-                                android:textSize="12sp"/>
-                        </LinearLayout>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <View android:layout_width="match_parent" android:layout_height="12dp"/>
-
-                <!-- 2-блок: Навигация (Көк) -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="80dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardBackgroundColor="#252525"
-                    app:cardElevation="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="16dp">
-
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            app:cardCornerRadius="24dp"
-                            app:cardBackgroundColor="#00E5FF">
-                            <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/navigation"
-                                app:tint="@color/black"/>
-                        </androidx.cardview.widget.CardView>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <TextView
-                                android:text="Navigation"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:textColor="@color/text_primary"
-                                android:textStyle="bold"
-                                android:textSize="16sp"/>
-                            <TextView
-                                android:text="Find nearby chargers"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:textColor="#80FFFFFF"
-                                android:textSize="12sp"/>
-                        </LinearLayout>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <View android:layout_width="match_parent" android:layout_height="12dp"/>
-
-                <!-- 3-блок: Spotify (Жасыл) -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="80dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardBackgroundColor="#252525"
-                    app:cardElevation="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="16dp">
-
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            app:cardCornerRadius="24dp"
-                            app:cardBackgroundColor="#1DB954">
-                            <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/music"
-                                app:tint="@color/black"/>
-                        </androidx.cardview.widget.CardView>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-                            <TextView
-                                android:text="Spotify"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:textColor="@color/text_primary"
-                                android:textStyle="bold"
-                                android:textSize="16sp"/>
-                            <TextView
-                                android:text="Play Indie Rock"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:textColor="#80FFFFFF"
-                                android:textSize="12sp"/>
-                        </LinearLayout>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- === Б) 70% КАРТА БЛОГЫ (ӨЗГЕРІССІЗ) === -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.7"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#1A1A1A">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <com.yandex.mapkit.mapview.MapView
-                    android:id="@+id/mapview"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-                <!-- Камера ескерту блогы -->
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/camera_alert_box"
-                    android:layout_width="230dp"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:background="@drawable/bg_alert_warning"
-                    android:padding="15dp"
-                    android:visibility="gone"
-                    android:alpha="0.95"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent">
+                    android:layout_weight="1"
+                    android:text="Жылдамдық"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvSpeed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 км/сағ"
+                    android:textColor="#03DAC5"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/alert_icon_bg"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:src="@drawable/seekbar_custom_thumb"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"/>
+            <!-- 2. АЙНАЛЫМ (RPM) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Айналым (RPM)"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvRpm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="#03DAC5"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:orientation="vertical"
-                        app:layout_constraintStart_toEndOf="@id/alert_icon_bg"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintTop_toTopOf="parent">
+            <!-- 3. ТЕМПЕРАТУРА (COOLANT) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Антифриз Темп."
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvTemp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 °C"
+                    android:textColor="#03DAC5"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/camera_text"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="300м ⬆"
-                            android:textColor="#CCFFFFFF"
-                            android:textStyle="bold"
-                            android:textSize="27sp"/>
-                    </LinearLayout>
-                </androidx.constraintlayout.widget.ConstraintLayout>
+            <!-- 4. ВОЛЬТАЖ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Вольтаж"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvVolt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-- V"
+                    android:textColor="#FFB74D"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </androidx.cardview.widget.CardView>
+            <!-- 5. ҚОЗҒАЛТҚЫШ ЖҮКТЕМЕСІ (LOAD) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Жүктеме (Load)"
+                    android:textColor="#B0BEC5"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvLoad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 %"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"/>
+            </LinearLayout>
 
-    </LinearLayout>
+            <!-- 6. ДРОССЕЛЬ ОРНЫ (THROTTLE) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Дроссель"
+                    android:textColor="#B0BEC5"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvThrottle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 %"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- 7. КІРЕТІН АУА ТЕМПЕРАТУРАСЫ (INTAKE TEMP) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Кіретін Ауа T."
+                    android:textColor="#B0BEC5"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvIntakeTemp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 °C"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- 8. АУА АҒЫНЫ (MAF) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Ауа ағыны (MAF)"
+                    android:textColor="#B0BEC5"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvMaf"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 г/с"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- 9. ЖАНАРМАЙ ДЕҢГЕЙІ (FUEL LEVEL) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Жанармай"
+                    android:textColor="#B0BEC5"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvFuelLevel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-- %"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- 10. АТМОСФЕРАЛЫҚ ҚЫСЫМ (BAROMETRIC) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Атм. Қысым"
+                    android:textColor="#B0BEC5"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvBarometric"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 кПа"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- 11. СЫРТҚЫ АУА ТЕМПЕРАТУРАСЫ (AMBIENT) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Сыртқы Ауа T."
+                    android:textColor="#B0BEC5"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvAmbientTemp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 °C"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- 12. ОТАЛУ БҰРЫШЫ (TIMING ADVANCE) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Оталу Бұрышы"
+                    android:textColor="#B0BEC5"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tvTiming"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 °"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- ТАРИХ БАТЫРМАСЫ -->
+    <Button
+        android:id="@+id/btnHistory"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="САПАРЛАР ТАРИХЫ"
+        android:backgroundTint="#3700B3"
+        android:textColor="#FFFFFF"
+        app:cornerRadius="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
