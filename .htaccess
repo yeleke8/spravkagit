@@ -1,0 +1,17 @@
+Options -MultiViews
+RewriteEngine On
+RewriteBase /
+
+# 1. Сначала обрабатываем конкретные маршруты (Заведения и Категории)
+# Это предотвращает конфликты с правилом скрытия .php
+
+# Ссылки для Заведений (place/slug) -> post.php?slug=$1
+RewriteRule ^place/([a-z0-9-]+)/?$ post.php?slug=$1 [L,QSA]
+
+# Ссылки для Категорий (category/slug) -> category.php?slug=$1
+RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
+
+# 2. Убираем расширение .php (для остальных файлов: login, dashboard и т.д.)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
