@@ -1,11 +1,11 @@
 <?php
-// templates/sidebar.php - Единая боковая панель для всех страниц
+// templates/sidebar.php
+// Внимание: Этот файл должен быть обернут в col-lg-3 или col-lg-2 в родительском файле!
 
-// Получаем текущее имя файла для подсветки активных пунктов меню
 $currentPage = basename($_SERVER['PHP_SELF']);
-$currentSort = $_GET['sort'] ?? '';
+$currentSlug = $_GET['slug'] ?? '';
 
-// Иконки для категорий
+// Иконки
 $catIcons = [
     'food' => 'fa-utensils',
     'beauty-sport' => 'fa-spa',
@@ -19,36 +19,37 @@ $catIcons = [
     'transport-logistics' => 'fa-taxi'
 ];
 
-// Получаем категории (родительские), если они еще не получены
 if (!isset($sidebarCategories)) {
     $stmtSidebar = $pdo->query("SELECT * FROM categories WHERE cat_parent_id IS NULL ORDER BY cat_id ASC");
     $sidebarCategories = $stmtSidebar->fetchAll();
 }
 ?>
 
-<!-- Используем col-md-3, чтобы совпадать с сеткой на остальных страницах (post.php, category.php) -->
-<div class="col-lg-3 col-md-4 mb-4">
-
-
-
-    <!-- 3. КАТЕГОРИИ -->
-    <div class="list-group shadow-sm mb-4">
-        <div class="list-group-item bg-white fw-bold text-uppercase small text-muted py-3">
-            Категории
-        </div>
+<div class="card border-0 shadow-sm p-3 sticky-top" style="top: 100px; z-index: 900;">
+    <h6 class="text-uppercase text-muted fw-bold small mb-3 px-2 ls-1">Категории</h6>
+    
+    <div class="list-group list-group-flush">
+        <a href="search.php" class="list-group-item list-group-item-action d-flex align-items-center">
+            <i class="fa-solid fa-layer-group me-3" style="width: 20px;"></i> Все места
+        </a>
+        
         <?php foreach ($sidebarCategories as $cat):
-            $icon = $catIcons[$cat['cat_slug']] ?? 'fa-layer-group';
-            // Проверка активности категории (если мы на странице category.php)
-            $isActiveCat = (isset($_GET['slug']) && $_GET['slug'] === $cat['cat_slug']);
+            $icon = $catIcons[$cat['cat_slug']] ?? 'fa-circle';
+            $isActive = ($currentSlug === $cat['cat_slug']);
         ?>
-        <a href="category.php?slug=<?= h($cat['cat_slug']) ?>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?= $isActiveCat ? 'active' : '' ?>">
-            <span>
-                <i class="fa-solid <?= $icon ?> me-2 <?= $isActiveCat ? '' : 'text-secondary opacity-75' ?>" style="width: 20px; text-align: center;"></i> 
-                <?= h($cat['cat_name']) ?>
-            </span>
-            <i class="fa-solid fa-angle-right small opacity-50"></i>
+        <a href="category/<?= h($cat['cat_slug']) ?>" 
+           class="list-group-item list-group-item-action d-flex align-items-center <?= $isActive ? 'active' : '' ?>">
+            <i class="fa-solid <?= $icon ?> me-3" style="width: 20px; text-align: center;"></i> 
+            <?= h($cat['cat_name']) ?>
+            <?php if($isActive): ?>
+                <i class="fa-solid fa-chevron-right ms-auto small"></i>
+            <?php endif; ?>
         </a>
         <?php endforeach; ?>
     </div>
-
+    
+    <div class="mt-4 p-3 bg-light rounded-3 text-center border border-dashed">
+        <p class="small text-muted mb-2">Владелец бизнеса?</p>
+        <a href="add.php" class="btn btn-outline-primary btn-sm w-100 fw-bold">Добавить место</a>
+    </div>
 </div>

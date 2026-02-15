@@ -1,5 +1,5 @@
 <?php 
-// templates/header.php
+// templates/header
 require_once __DIR__ . '/../back/db.php';
 require_once __DIR__ . '/../back/functions.php';
 
@@ -47,7 +47,7 @@ if (is_logged_in()) {
 <!-- Navbar Full Width -->
 <nav class="navbar navbar-expand-lg navbar-light fixed-top border-bottom">
     <div class="container-fluid px-4 px-lg-5">
-        <a class="navbar-brand text-primary fs-4 me-4" href="index.php">
+        <a class="navbar-brand text-primary fs-4 me-4" href="index">
             <i class="fa-solid fa-map-location-dot"></i> Spravka<span class="text-dark">.kz</span>
         </a>
 
@@ -57,7 +57,7 @@ if (is_logged_in()) {
 
         <div class="collapse navbar-collapse" id="navbarContent">
             <!-- Поиск в шапке -->
-            <form class="d-flex mx-lg-auto my-2 my-lg-0 col-lg-5" action="search.php" method="GET">
+            <form class="d-flex mx-lg-auto my-2 my-lg-0 col-lg-5" action="search" method="GET">
                 <div class="input-group bg-light rounded-pill border px-2 py-1 w-100">
                     <span class="input-group-text bg-transparent border-0 text-muted"><i class="fa-solid fa-search"></i></span>
                     <input class="form-control bg-transparent border-0 shadow-none" type="search" name="q" placeholder="Поиск мест, услуг, товаров..." value="<?= isset($_GET['q']) ? h($_GET['q']) : '' ?>">
@@ -65,9 +65,9 @@ if (is_logged_in()) {
             </form>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center fw-medium">
-                <li class="nav-item px-2"><a class="nav-link" href="index.php">Главная</a></li>
-                <li class="nav-item px-2"><a class="nav-link" href="search.php?sort=rating">Рейтинг</a></li>
-                <li class="nav-item px-2"><a class="nav-link" href="search.php?sort=date">Новинки</a></li>
+                <li class="nav-item px-2"><a class="nav-link" href="index">Главная</a></li>
+                <li class="nav-item px-2"><a class="nav-link" href="search?sort=rating">Рейтинг</a></li>
+                <li class="nav-item px-2"><a class="nav-link" href="search?sort=date">Новинки</a></li>
 
                 <li class="nav-item d-none d-lg-block mx-2 text-muted opacity-25">|</li>
 
@@ -81,20 +81,20 @@ if (is_logged_in()) {
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 rounded-4 overflow-hidden" aria-labelledby="userDropdown">
                             <li><div class="dropdown-header">Ваш аккаунт</div></li>
-                            <li><a class="dropdown-item py-2" href="dashboard.php"><i class="fa-solid fa-gauge me-2 text-primary"></i> Личный кабинет</a></li>
+                            <li><a class="dropdown-item py-2" href="dashboard"><i class="fa-solid fa-gauge me-2 text-primary"></i> Личный кабинет</a></li>
                             <?php if ($_SESSION['user_type'] === 'admin' || $_SESSION['user_type'] === 'owner'): ?>
-                                <li><a class="dropdown-item py-2" href="add.php"><i class="fa-solid fa-plus me-2 text-success"></i> Добавить место</a></li>
+                                <li><a class="dropdown-item py-2" href="add"><i class="fa-solid fa-plus me-2 text-success"></i> Добавить место</a></li>
                             <?php endif; ?>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger py-2" href="login.php?logout=1"><i class="fa-solid fa-right-from-bracket me-2"></i> Выход</a></li>
+                            <li><a class="dropdown-item text-danger py-2" href="login?logout=1"><i class="fa-solid fa-right-from-bracket me-2"></i> Выход</a></li>
                         </ul>
                     </li>
                 <?php else: ?>
                     <li class="nav-item ms-lg-2">
-                        <a class="nav-link" href="login.php">Вход</a>
+                        <a class="nav-link" href="login">Вход</a>
                     </li>
                     <li class="nav-item ms-2">
-                        <a class="btn btn-primary rounded-pill px-4 shadow-sm" href="register.php">Регистрация</a>
+                        <a class="btn btn-primary rounded-pill px-4 shadow-sm" href="register">Регистрация</a>
                     </li>
                 <?php endif; ?>
             </ul>
@@ -127,6 +127,6 @@ if (is_logged_in()) {
 <?php endif; ?>
 
 <!-- Main Content Wrapper Full Width -->
-<!-- Внимание: Этот div закрывается в footer.php -->
+<!-- Внимание: Этот div закрывается в footer -->
 <div class="container-fluid px-4 px-lg-5 flex-shrink-0">
     <div class="row">
