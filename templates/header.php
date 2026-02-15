@@ -25,7 +25,7 @@ if (is_logged_in()) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="/assets/style.css">
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
@@ -47,7 +47,7 @@ if (is_logged_in()) {
 <!-- Navbar Full Width -->
 <nav class="navbar navbar-expand-lg navbar-light fixed-top border-bottom">
     <div class="container-fluid px-4 px-lg-5">
-        <a class="navbar-brand text-primary fs-4 me-4" href="index">
+        <a class="navbar-brand text-primary fs-4 me-4" href="/index">
             <i class="fa-solid fa-map-location-dot"></i> Spravka<span class="text-dark">.kz</span>
         </a>
 
@@ -65,9 +65,9 @@ if (is_logged_in()) {
             </form>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center fw-medium">
-                <li class="nav-item px-2"><a class="nav-link" href="index">Главная</a></li>
-                <li class="nav-item px-2"><a class="nav-link" href="search?sort=rating">Рейтинг</a></li>
-                <li class="nav-item px-2"><a class="nav-link" href="search?sort=date">Новинки</a></li>
+                <li class="nav-item px-2"><a class="nav-link" href="/index">Главная</a></li>
+                <li class="nav-item px-2"><a class="nav-link" href="/search?sort=rating">Рейтинг</a></li>
+                <li class="nav-item px-2"><a class="nav-link" href="/search?sort=date">Новинки</a></li>
 
                 <li class="nav-item d-none d-lg-block mx-2 text-muted opacity-25">|</li>
 
@@ -81,20 +81,20 @@ if (is_logged_in()) {
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 rounded-4 overflow-hidden" aria-labelledby="userDropdown">
                             <li><div class="dropdown-header">Ваш аккаунт</div></li>
-                            <li><a class="dropdown-item py-2" href="dashboard"><i class="fa-solid fa-gauge me-2 text-primary"></i> Личный кабинет</a></li>
+                            <li><a class="dropdown-item py-2" href="/dashboard"><i class="fa-solid fa-gauge me-2 text-primary"></i> Личный кабинет</a></li>
                             <?php if ($_SESSION['user_type'] === 'admin' || $_SESSION['user_type'] === 'owner'): ?>
-                                <li><a class="dropdown-item py-2" href="add"><i class="fa-solid fa-plus me-2 text-success"></i> Добавить место</a></li>
+                                <li><a class="dropdown-item py-2" href="/add"><i class="fa-solid fa-plus me-2 text-success"></i> Добавить место</a></li>
                             <?php endif; ?>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger py-2" href="login?logout=1"><i class="fa-solid fa-right-from-bracket me-2"></i> Выход</a></li>
+                            <li><a class="dropdown-item text-danger py-2" href="/login?logout=1"><i class="fa-solid fa-right-from-bracket me-2"></i> Выход</a></li>
                         </ul>
                     </li>
                 <?php else: ?>
                     <li class="nav-item ms-lg-2">
-                        <a class="nav-link" href="login">Вход</a>
+                        <a class="nav-link" href="/login">Вход</a>
                     </li>
                     <li class="nav-item ms-2">
-                        <a class="btn btn-primary rounded-pill px-4 shadow-sm" href="register">Регистрация</a>
+                        <a class="btn btn-primary rounded-pill px-4 shadow-sm" href="/register">Регистрация</a>
                     </li>
                 <?php endif; ?>
             </ul>

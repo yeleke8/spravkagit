@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const textSpan = btn.querySelector('.btn-text'); // Текст на кнопке (в post.php)
 
         try {
-            let response = await fetch('ajax-favorite.php', {
+            let response = await fetch('/ajax-favorite.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'

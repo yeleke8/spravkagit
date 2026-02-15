@@ -37,7 +37,7 @@ if (!isset($sidebarCategories)) {
             $icon = $catIcons[$cat['cat_slug']] ?? 'fa-circle';
             $isActive = ($currentSlug === $cat['cat_slug']);
         ?>
-        <a href="category/<?= h($cat['cat_slug']) ?>" 
+        <a href="/category/<?= h($cat['cat_slug']) ?>" 
            class="list-group-item list-group-item-action d-flex align-items-center <?= $isActive ? 'active' : '' ?>">
             <i class="fa-solid <?= $icon ?> me-3" style="width: 20px; text-align: center;"></i> 
             <?= h($cat['cat_name']) ?>
@@ -50,6 +50,6 @@ if (!isset($sidebarCategories)) {
     
     <div class="mt-4 p-3 bg-light rounded-3 text-center border border-dashed">
         <p class="small text-muted mb-2">Владелец бизнеса?</p>
-        <a href="add.php" class="btn btn-outline-primary btn-sm w-100 fw-bold">Добавить место</a>
+        <a href="/add.php" class="btn btn-outline-primary btn-sm w-100 fw-bold">Добавить место</a>
     </div>
 </div>

@@ -1,20 +1,14 @@
+Options -MultiViews
 RewriteEngine On
 RewriteBase /
 
-# 1. Убираем расширение .php (например, login.php -> /login)
+# 1. Убираем расширение .php
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^([^\.]+)$ $1.php [NC,L]
 
-# 2. Красивые ссылки для Заведений
-# Было: post.php?slug=imya-mesta
-# Стало: place/imya-mesta
+# 2. Ссылки для Заведений (place/slug)
 RewriteRule ^place/([a-z0-9-]+)/?$ post.php?slug=$1 [L,QSA]
 
-# 3. Красивые ссылки для Категорий
-# Было: category.php?slug=food
-# Стало: category/food
+# 3. Ссылки для Категорий (category/slug)
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
-
-# 4. Красивые ссылки для Поиска (опционально)
-# search.php -> /search

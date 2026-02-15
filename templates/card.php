@@ -42,7 +42,7 @@ if (!empty($post['worktime'])) {
         <div class="card-body d-flex flex-column p-3">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <h6 class="fw-bold mb-0 text-truncate pe-2" style="font-size: 1.05rem;">
-                    <a href="place/<?= h($post['slug']) ?>" class="text-dark text-decoration-none stretched-link">
+                    <a href="/place/<?= h($post['slug']) ?>" class="text-dark text-decoration-none stretched-link">
                         <?= h($post['title']) ?>
                     </a>
                 </h6>

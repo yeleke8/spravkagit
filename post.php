@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const textSpan = this.querySelector('.btn-text');
             
             try {
-                let response = await fetch('ajax-favorite.php', { method: 'POST', body: JSON.stringify({id: postId}) });
+                let response = await fetch('/ajax-favorite.php', { method: 'POST', body: JSON.stringify({id: postId}) });
                 let result = await response.json();
                 if (result.status === 'success') {
                     if (result.action === 'added') {

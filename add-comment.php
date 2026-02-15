@@ -32,7 +32,7 @@ if (!$post) {
     exit;
 }
 
-$redirectUrl = "post.php?slug=" . $post['slug'];
+$redirectUrl = "/place/" . $post['slug'];
 
 // 4. Валидация данных
 $errors = [];
