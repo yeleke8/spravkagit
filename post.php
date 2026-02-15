@@ -1,59 +1,31 @@
 <?php
-// post.php - Детальная страница заведения
+// post.php - Детальная страница
 require_once 'templates/header.php';
-require_once 'templates/sidebar.php';
-
-echo '<div class="col-md-9">';
 
 $slug = $_GET['slug'] ?? '';
 $post = getPostBySlug($pdo, $slug);
 
 if (!$post) {
-    echo "<div class='alert alert-danger'>Заведение не найдено или удалено.</div>";
-    echo '</div>'; 
+    echo "<div class='col-12'><div class='alert alert-danger my-5 text-center'>Заведение не найдено.</div></div>";
     require_once 'templates/footer.php';
     exit;
 }
 
-// 1. ЛОГИКА ПРОСМОТРОВ (Через БД)
-// Получаем реальный IP
+// Логика просмотров... (оставляем ту же, что была)
 $userIp = getRealIp();
-// Конвертируем IP в бинарный формат для типа поля varbinary(16)
 $userIpBin = inet_pton($userIp); 
 $currentUserId = is_logged_in() ? $_SESSION['user_id'] : null;
-
-// Проверяем, был ли просмотр с этого IP для этого поста за последние 24 часа
-$stmtCheckView = $pdo->prepare("
-    SELECT view_id FROM log_post_views 
-    WHERE post_id = ? 
-    AND ip_address = ? 
-    AND viewed_at > (NOW() - INTERVAL 5 MINUTE)
-");
+$stmtCheckView = $pdo->prepare("SELECT view_id FROM log_post_views WHERE post_id = ? AND ip_address = ? AND viewed_at > (NOW() - INTERVAL 5 MINUTE)");
 $stmtCheckView->execute([$post['post_id'], $userIpBin]);
-
 if (!$stmtCheckView->fetch()) {
-    // Если просмотра не было за последние 5 минут:
     try {
-        // 1. Добавляем запись в лог
-        $stmtInsertLog = $pdo->prepare("INSERT INTO log_post_views (post_id, user_id, ip_address) VALUES (?, ?, ?)");
-        $stmtInsertLog->execute([$post['post_id'], $currentUserId, $userIpBin]);
-
-        // 2. Увеличиваем счетчик в самой таблице post
+        $pdo->prepare("INSERT INTO log_post_views (post_id, user_id, ip_address) VALUES (?, ?, ?)")->execute([$post['post_id'], $currentUserId, $userIpBin]);
         $pdo->prepare("UPDATE post SET views = views + 1 WHERE post_id = ?")->execute([$post['post_id']]);
-        
-        // 3. Обновляем переменную $post, чтобы пользователь сразу увидел изменение
         $post['views']++;
-        
-    } catch (PDOException $e) {
-        // Игнорируем ошибки логирования, чтобы не ломать страницу
-        // error_log("View log error: " . $e->getMessage());
-    }
+    } catch (PDOException $e) {}
 }
 
-
-// 2. Доп данные
-// --- УДАЛЕНО: Запрос к таблице photos ---
-
+// Данные
 $stmtTags = $pdo->prepare("SELECT t.* FROM tags t JOIN s_tags st ON t.attr_id = st.attr_id WHERE st.post_id = ?");
 $stmtTags->execute([$post['post_id']]);
 $tags = $stmtTags->fetchAll();
@@ -62,34 +34,13 @@ $contacts = json_decode($post['contacts'], true) ?? [];
 $attributes = json_decode($post['attributes'], true) ?? [];
 $worktime = json_decode($post['worktime'], true) ?? [];
 
-// 3. Отзывы
-$stmtComments = $pdo->prepare("
-    SELECT c.*, u.user_name
-    FROM comments c
-    JOIN users u ON c.user_id = u.user_id
-    WHERE c.post_id = ? AND c.is_approved = 1
-    ORDER BY c.created_at DESC
-");
+$stmtComments = $pdo->prepare("SELECT c.*, u.user_name FROM comments c JOIN users u ON c.user_id = u.user_id WHERE c.post_id = ? AND c.is_approved = 1 ORDER BY c.created_at DESC");
 $stmtComments->execute([$post['post_id']]);
 $comments = $stmtComments->fetchAll();
 
-// --- Гарантированная загрузка избранного ---
-if (is_logged_in() && !isset($myFavs)) {
-    $stmtF = $pdo->prepare("SELECT post_id FROM s_favorites WHERE user_id = ?");
-    $stmtF->execute([$_SESSION['user_id']]);
-    $myFavs = $stmtF->fetchAll(PDO::FETCH_COLUMN);
-} else if (!is_logged_in()) {
-    $myFavs = [];
-}
-
 $userHasReview = false;
 if (is_logged_in()) {
-    foreach($comments as $c) {
-        if ($c['user_id'] == $_SESSION['user_id']) {
-            $userHasReview = true;
-            break;
-        }
-    }
+    foreach($comments as $c) if ($c['user_id'] == $_SESSION['user_id']) $userHasReview = true;
     if (!$userHasReview) {
         $stmtCheck = $pdo->prepare("SELECT comment_id FROM comments WHERE user_id = ? AND post_id = ?");
         $stmtCheck->execute([$_SESSION['user_id'], $post['post_id']]);
@@ -98,148 +49,162 @@ if (is_logged_in()) {
 }
 ?>
 
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Главная</a></li>
-    <li class="breadcrumb-item active" aria-current="page"><?= h($post['title']) ?></li>
-  </ol>
-</nav>
-
-<div class="card shadow-sm mb-4">
-    <!-- Main Photo (Carousel removed as photos table is gone) -->
-    <div class="position-relative">
-        <img src="<?= h($post['photo']) ?>" class="d-block w-100" style="height: 400px; object-fit: cover;" alt="Main Photo">
-        <!-- Caption Overlay -->
-        <div class="position-absolute bottom-0 start-0 w-100 p-3 d-none d-md-block">
-             <div class="bg-dark bg-opacity-75 rounded p-3 text-white">
-                <h2 class="h3 mb-1"><?= h($post['title']) ?></h2>
-                <p class="mb-0 small"><i class="fa-solid fa-location-dot"></i> <?= h($post['address']) ?></p>
-             </div>
-        </div>
-    </div>
-
-    <div class="card-body">
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-            <h1 class="h3 mb-2"><?= h($post['title']) ?></h1>
-            <div class="d-flex align-items-center bg-light border px-3 py-2 rounded">
-                <span class="fw-bold fs-5 me-2"><?= number_format($post['rating_avg'], 1) ?></span>
-                <div class="text-warning me-2">
-                    <?php
-                    $rating = round($post['rating_avg']);
-                    for ($i = 1; $i <= 5; $i++) echo ($i <= $rating) ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star text-secondary"></i>';
-                    ?>
-                </div>
-                <small class="text-muted border-start ps-2"><?= $post['rating_count'] ?> отзывов</small>
-            </div>
-        </div>
-
-        <?php if($tags): ?>
-        <div class="mb-4">
-            <?php foreach($tags as $tag): ?>
-                <span class="badge bg-light text-dark border p-2 me-1 mb-1 fw-normal">
-                    <i class="fa-solid <?= h($tag['attr_icon']) ?> text-primary me-1"></i> <?= h($tag['attr_name']) ?>
-                </span>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
-
-        <h5 class="fw-bold">Описание</h5>
-        <p class="card-text text-muted">
-            <?= nl2br(h($post['description'])) ?>
-        </p>
-
-        <?php if(!empty($attributes)): ?>
-            <div class="alert alert-light border mt-4">
-                <div class="row">
-                    <?php if(isset($attributes['avg_check'])): ?>
-                        <div class="col-md-6 mb-2">
-                            <i class="fa-solid fa-wallet text-muted me-2"></i> Средний чек: <strong><?= h($attributes['avg_check']) ?> ₸</strong>
-                        </div>
-                    <?php endif; ?>
-                    <?php if(isset($attributes['cuisine'])): ?>
-                        <div class="col-md-6 mb-2">
-                            <i class="fa-solid fa-utensils text-muted me-2"></i> Кухня: <strong><?= h($attributes['cuisine']) ?></strong>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
+<!-- Левая колонка: Навигация -->
+<div class="col-lg-2 d-none d-lg-block">
+    <div class="sticky-top" style="top: 100px;">
+        <a href="index.php" class="btn btn-light w-100 text-start mb-2 rounded-pill"><i class="fa-solid fa-arrow-left me-2"></i> Главная</a>
+        <a href="search.php" class="btn btn-light w-100 text-start mb-2 rounded-pill"><i class="fa-solid fa-search me-2"></i> Поиск</a>
+        <hr>
+        <div class="text-muted small px-2">Категория</div>
+        <?php 
+           // Получаем категорию поста для хлебных крошек
+           $stmtCat = $pdo->prepare("SELECT c.cat_name, c.cat_slug FROM categories c JOIN s_categories sc ON c.cat_id = sc.cat_id WHERE sc.post_id = ? LIMIT 1");
+           $stmtCat->execute([$post['post_id']]);
+           $pCat = $stmtCat->fetch();
+        ?>
+        <?php if($pCat): ?>
+            <a href="category.php?slug=<?= $pCat['cat_slug'] ?>" class="fw-bold text-decoration-none d-block px-2 mt-1"><?= h($pCat['cat_name']) ?></a>
         <?php endif; ?>
     </div>
 </div>
 
-<div class="row">
-    <!-- Отзывы -->
-    <div class="col-lg-8">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="h5 mb-0">Отзывы посетителей</h4>
+<!-- Центральная колонка: Контент -->
+<div class="col-lg-7 col-xl-7">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <!-- Главное фото -->
+        <div class="position-relative bg-dark" style="height: 400px;">
+             <img src="<?= h($post['photo']) ?>" class="w-100 h-100" style="object-fit: cover; opacity: 0.9;" alt="Main Photo">
+             <div class="position-absolute bottom-0 start-0 w-100 p-4" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+                <h1 class="text-white fw-bold mb-1"><?= h($post['title']) ?></h1>
+                <p class="text-white-50 mb-0"><i class="fa-solid fa-location-dot me-2"></i> <?= h($post['address']) ?></p>
+             </div>
         </div>
+
+        <div class="card-body p-4">
+            <!-- Рейтинг и действия -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <div class="d-flex align-items-center">
+                    <div class="bg-warning text-dark px-2 py-1 rounded fw-bold fs-5 me-2"><?= number_format($post['rating_avg'], 1) ?></div>
+                    <div class="text-warning me-3 small">
+                        <?php $r = round($post['rating_avg']); for($i=1;$i<=5;$i++) echo ($i<=$r)?'<i class="fa-solid fa-star"></i>':'<i class="fa-regular fa-star text-secondary"></i>'; ?>
+                        <div class="text-muted text-nowrap"><?= $post['rating_count'] ?> отзывов</div>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <?php 
+                        $isFav = false;
+                        if(is_logged_in() && isset($myFavs)) $isFav = in_array($post['post_id'], $myFavs);
+                    ?>
+                    <button type="button" id="favButton" class="btn <?= $isFav ? 'btn-danger' : 'btn-outline-danger' ?> btn-favorite rounded-pill px-4" data-id="<?= $post['post_id'] ?>">
+                        <i class="<?= $isFav ? 'fa-solid' : 'fa-regular' ?> fa-heart me-1"></i> 
+                        <span class="btn-text"><?= $isFav ? 'В избранном' : 'В избранное' ?></span>
+                    </button>
+                    <button class="btn btn-outline-primary rounded-pill px-3" onclick="navigator.clipboard.writeText(window.location.href); alert('Ссылка скопирована!');"><i class="fa-solid fa-share"></i></button>
+                </div>
+            </div>
+
+            <!-- Теги -->
+            <?php if($tags): ?>
+            <div class="mb-4">
+                <?php foreach($tags as $tag): ?>
+                    <span class="d-inline-flex align-items-center bg-light border px-3 py-2 rounded-pill me-2 mb-2 text-dark small">
+                        <i class="fa-solid <?= h($tag['attr_icon']) ?> text-primary me-2"></i> <?= h($tag['attr_name']) ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <h5 class="fw-bold mb-3">О месте</h5>
+            <p class="text-muted mb-4 lh-lg">
+                <?= nl2br(h($post['description'])) ?>
+            </p>
+
+            <?php if(!empty($attributes)): ?>
+                <div class="row g-3 p-3 bg-light rounded-3 mb-4">
+                    <?php if(isset($attributes['avg_check'])): ?>
+                        <div class="col-sm-6 d-flex align-items-center">
+                            <i class="fa-solid fa-wallet text-secondary fs-4 me-3"></i>
+                            <div>
+                                <small class="text-muted d-block">Средний чек</small>
+                                <span class="fw-bold"><?= h($attributes['avg_check']) ?> ₸</span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if(isset($attributes['cuisine'])): ?>
+                        <div class="col-sm-6 d-flex align-items-center">
+                            <i class="fa-solid fa-utensils text-secondary fs-4 me-3"></i>
+                            <div>
+                                <small class="text-muted d-block">Кухня / Тип</small>
+                                <span class="fw-bold"><?= h($attributes['cuisine']) ?></span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Блок Отзывов -->
+    <div class="mb-5">
+        <h4 class="fw-bold mb-4">Отзывы <span class="text-muted fw-normal fs-6 ms-2">(<?= count($comments) ?>)</span></h4>
 
         <?php if(is_logged_in()): ?>
             <?php if(!$userHasReview): ?>
-                <div class="card mb-4 border shadow-sm">
-                    <div class="card-header bg-light fw-bold">Оставить отзыв</div>
+                <div class="card border-0 shadow-sm mb-4 bg-primary bg-opacity-10">
                     <div class="card-body">
+                        <h6 class="fw-bold mb-3">Оставьте свой отзыв</h6>
                         <form action="add-comment.php" method="POST">
                             <input type="hidden" name="post_id" value="<?= $post['post_id'] ?>">
-
                             <div class="mb-3">
-                                <label class="form-label">Ваша оценка</label>
-                                <select name="rating" class="form-select">
-                                    <option value="5">5 - Отлично</option>
-                                    <option value="4">4 - Хорошо</option>
-                                    <option value="3">3 - Нормально</option>
-                                    <option value="2">2 - Плохо</option>
-                                    <option value="1">1 - Ужасно</option>
-                                </select>
+                                <div class="rating-input d-flex gap-2 fs-3 text-warning mb-2" style="cursor: pointer;">
+                                    <!-- Простая реализация выбора -->
+                                    <select name="rating" class="form-select w-auto">
+                                        <option value="5">⭐⭐⭐⭐⭐ Отлично</option>
+                                        <option value="4">⭐⭐⭐⭐ Хорошо</option>
+                                        <option value="3">⭐⭐⭐ Нормально</option>
+                                        <option value="2">⭐⭐ Плохо</option>
+                                        <option value="1">⭐ Ужасно</option>
+                                    </select>
+                                </div>
+                                <textarea name="comment" class="form-control" rows="3" required placeholder="Расскажите о своих впечатлениях..."></textarea>
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Комментарий</label>
-                                <textarea name="comment" class="form-control" rows="3" required placeholder="Напишите ваше мнение..."></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Опубликовать</button>
+                            <button type="submit" class="btn btn-primary px-4">Опубликовать</button>
                         </form>
                     </div>
                 </div>
-            <?php else: ?>
-                <div class="alert alert-success mb-4">
-                    <i class="fa-solid fa-check-circle me-2"></i> Вы уже оценили это заведение.
-                </div>
             <?php endif; ?>
         <?php else: ?>
-            <div class="alert alert-secondary mb-4">
-                <a href="login.php" class="alert-link">Войдите</a>, чтобы оставить отзыв.
+            <div class="alert alert-light border text-center py-4">
+                <a href="login.php" class="fw-bold">Войдите</a>, чтобы оставить отзыв.
             </div>
         <?php endif; ?>
 
         <?php if(empty($comments)): ?>
-            <div class="text-center py-4 border rounded bg-light text-muted">
-                Отзывов пока нет. Будьте первым!
-            </div>
+            <div class="text-center text-muted py-5">Нет отзывов. Будьте первым!</div>
         <?php else: ?>
             <?php foreach($comments as $comment): ?>
-                <div class="card mb-3">
+                <div class="card border-0 shadow-sm mb-3">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <h6 class="card-title fw-bold mb-1">
-                                <i class="fa-solid fa-user-circle text-muted"></i> <?= h($comment['user_name']) ?>
-                            </h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                    <i class="fa-solid fa-user text-secondary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0"><?= h($comment['user_name']) ?></h6>
+                                    <div class="text-warning small" style="font-size: 0.8rem;">
+                                        <?php for ($i=1; $i<=5; $i++) echo ($i <= $comment['rating']) ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star text-secondary"></i>'; ?>
+                                    </div>
+                                </div>
+                            </div>
                             <small class="text-muted"><?= date('d.m.Y', strtotime($comment['created_at'])) ?></small>
                         </div>
-                        
-                        <div class="mb-2 text-warning small">
-                            <?php for ($i=1; $i<=5; $i++) echo ($i <= $comment['rating']) ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star text-secondary"></i>'; ?>
-                        </div>
-
-                        <p class="card-text mb-2"><?= nl2br(h($comment['comment'])) ?></p>
-
+                        <p class="mb-1 ms-5"><?= nl2br(h($comment['comment'])) ?></p>
                         <?php if($comment['owner_reply']): ?>
-                            <div class="mt-3 p-3 bg-light border-start border-4 border-success">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <strong class="text-success small"><i class="fa-solid fa-store me-1"></i> Ответ представителя</strong>
-                                    <small class="text-muted"><?= date('d.m.Y', strtotime($comment['reply_created_at'])) ?></small>
-                                </div>
-                                <p class="mb-0 small fst-italic text-secondary"><?= nl2br(h($comment['owner_reply'])) ?></p>
+                            <div class="ms-5 mt-3 p-3 bg-light rounded-3 border-start border-4 border-success">
+                                <small class="fw-bold text-success d-block mb-1">Ответ заведения</small>
+                                <p class="mb-0 small text-secondary"><?= nl2br(h($comment['owner_reply'])) ?></p>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -248,142 +213,101 @@ if (is_logged_in()) {
         <?php endif; ?>
     </div>
 
-    <!-- Сайдбар справа -->
-    <div class="col-lg-4">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-white fw-bold">Контакты</div>
-            <div class="card-body">
-                
-                <?php if (!empty($post['worktime'])):
-                    $status = getWorkStatus($post['worktime']);
-                ?>
-                    <div class="alert alert-<?= $status['color'] ?> d-flex align-items-center p-2 mb-3">
-                        <i class="fa-regular fa-clock fa-2x me-3"></i>
-                        <div>
-                            <div class="fw-bold"><?= $status['text'] ?></div>
-                            <small>Статус сейчас</small>
-                        </div>
+</div>
+
+<!-- Правая колонка: Инфо -->
+<div class="col-lg-3 col-xl-3">
+    <div class="card shadow-sm border-0 rounded-4 mb-4 sticky-top" style="top: 100px;">
+        <div class="card-body p-4">
+            
+            <?php if (!empty($post['worktime'])):
+                $status = getWorkStatus($post['worktime']);
+            ?>
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-<?= $status['color'] ?> text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 48px; height: 48px;">
+                        <i class="fa-regular fa-clock fs-5"></i>
                     </div>
-                <?php endif; ?>
-
-                <ul class="list-unstyled mb-3">
-                    <?php if(!empty($contacts['phone']) && $contacts['phone'] !== '-'): ?>
-                    <li class="mb-2">
-                        <small class="text-muted d-block">Телефон</small>
-                        <a href="tel:<?= h($contacts['phone']) ?>" class="text-decoration-none fw-bold text-dark fs-5"><?= h($contacts['phone']) ?></a>
-                    </li>
-                    <?php endif; ?>
-
-                    <?php if(!empty($contacts['whatsapp']) && $contacts['whatsapp'] !== '-'): ?>
-                    <li class="mb-2">
-                        <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $contacts['whatsapp']) ?>" class="btn btn-success w-100 btn-sm">
-                            <i class="fa-brands fa-whatsapp"></i> Написать в WhatsApp
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-
-                <div class="d-grid gap-2">
-                    <?php 
-                        $isFav = false;
-                        if(is_logged_in() && isset($myFavs)) {
-                            $isFav = in_array($post['post_id'], $myFavs);
-                        }
-                    ?>
-                    <button type="button" id="favButton" class="btn <?= $isFav ? 'btn-danger' : 'btn-outline-danger' ?> btn-favorite" data-id="<?= $post['post_id'] ?>">
-                        <i class="<?= $isFav ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i> 
-                        <span class="btn-text"><?= $isFav ? 'В избранном' : 'В избранное' ?></span>
-                    </button>
-
-                    <?php if(is_logged_in() && ($_SESSION['user_type'] === 'admin' || ($_SESSION['user_type'] === 'owner' && $post['owner_id'] == $_SESSION['user_id']))): ?>
-                        <a href="edit.php?id=<?= $post['post_id'] ?>" class="btn btn-secondary"><i class="fa-solid fa-pen"></i> Редактировать</a>
-                    <?php endif; ?>
+                    <div>
+                        <div class="fw-bold <?= 'text-'.$status['color'] ?>"><?= $status['text'] ?></div>
+                        <small class="text-muted">Статус сейчас</small>
+                    </div>
                 </div>
+            <?php endif; ?>
 
-                <?php if(isset($worktime) && !empty($worktime)): ?>
-                    <hr>
-                    <h6 class="small text-muted fw-bold">График работы</h6>
-                    <table class="table table-sm table-borderless small mb-0">
-                        <?php
-                        $daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-                        $todayKey = strtolower(date('D'));
-                        foreach ($daysOrder as $d):
-                            $time = $worktime[$d] ?? 'closed';
-                            $rowClass = ($d === $todayKey) ? 'table-primary fw-bold' : '';
-                        ?>
-                            <tr class="<?= $rowClass ?>">
-                                <td><?= getDayName($d) ?></td>
-                                <td class="text-end">
-                                    <?= ($time === 'closed' || empty($time)) ? '<span class="text-danger">Вых.</span>' : h($time) ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </table>
+            <h6 class="fw-bold mb-3 border-bottom pb-2">Контакты</h6>
+            <ul class="list-unstyled mb-4">
+                <?php if(!empty($contacts['phone']) && $contacts['phone'] !== '-'): ?>
+                <li class="mb-3">
+                    <small class="text-muted d-block mb-1">Телефон</small>
+                    <a href="tel:<?= h($contacts['phone']) ?>" class="fw-bold text-dark text-decoration-none fs-5"><?= h($contacts['phone']) ?></a>
+                </li>
                 <?php endif; ?>
-                
-            </div>
+
+                <?php if(!empty($contacts['whatsapp']) && $contacts['whatsapp'] !== '-'): ?>
+                <li>
+                    <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $contacts['whatsapp']) ?>" class="btn btn-success w-100 fw-medium rounded-pill py-2">
+                        <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
+                    </a>
+                </li>
+                <?php endif; ?>
+            </ul>
+
+            <?php if(isset($worktime) && !empty($worktime)): ?>
+                <h6 class="fw-bold mb-3 border-bottom pb-2">График работы</h6>
+                <ul class="list-unstyled small mb-0">
+                    <?php
+                    $daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+                    $todayKey = strtolower(date('D'));
+                    foreach ($daysOrder as $d):
+                        $time = $worktime[$d] ?? 'closed';
+                        $isToday = ($d === $todayKey);
+                    ?>
+                        <li class="d-flex justify-content-between py-1 <?= $isToday ? 'fw-bold text-primary' : '' ?>">
+                            <span><?= getDayName($d) ?></span>
+                            <span><?= ($time === 'closed' || empty($time)) ? '<span class="text-danger">Вых.</span>' : h($time) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+            
+            <?php if($_SESSION['user_type'] === 'admin' || ($_SESSION['user_type'] === 'owner' && $post['owner_id'] == $_SESSION['user_id'])): ?>
+                <div class="mt-4 pt-3 border-top text-center">
+                    <a href="edit.php?id=<?= $post['post_id'] ?>" class="btn btn-secondary w-100 btn-sm">Редактировать</a>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
 <script>
+// JS для кнопки избранного
 document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('favButton');
-    
     if (btn) {
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.addEventListener('click', async function(e) {
+        btn.addEventListener('click', async function(e) {
             e.preventDefault();
-            
-            this.style.transform = "scale(0.9)";
-            setTimeout(() => this.style.transform = "scale(1)", 150);
-
             const postId = this.getAttribute('data-id');
             const icon = this.querySelector('i');
             const textSpan = this.querySelector('.btn-text');
-
+            
             try {
-                let response = await fetch('ajax-favorite.php', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json;charset=utf-8'},
-                    body: JSON.stringify({id: postId})
-                });
-
+                let response = await fetch('ajax-favorite.php', { method: 'POST', body: JSON.stringify({id: postId}) });
                 let result = await response.json();
-
                 if (result.status === 'success') {
                     if (result.action === 'added') {
-                        icon.classList.remove('fa-regular');
-                        icon.classList.add('fa-solid');
-                        this.classList.remove('btn-outline-danger');
-                        this.classList.add('btn-danger');
+                        icon.classList.remove('fa-regular'); icon.classList.add('fa-solid');
+                        this.classList.remove('btn-outline-danger'); this.classList.add('btn-danger');
                         if(textSpan) textSpan.textContent = 'В избранном';
                     } else {
-                        icon.classList.remove('fa-solid');
-                        icon.classList.add('fa-regular');
-                        this.classList.remove('btn-danger');
-                        this.classList.add('btn-outline-danger');
+                        icon.classList.remove('fa-solid'); icon.classList.add('fa-regular');
+                        this.classList.remove('btn-danger'); this.classList.add('btn-outline-danger');
                         if(textSpan) textSpan.textContent = 'В избранное';
                     }
-                } else if (result.status === 'login_required' || result.message === 'Нужна авторизация') {
-                    window.location.href = 'login.php';
-                } else {
-                    console.error('Ошибка сервера:', result);
-                }
-            } catch (err) {
-                console.error('Ошибка запроса:', err);
-                if(!<?php echo is_logged_in() ? 'true' : 'false'; ?>) {
-                      window.location.href = 'login.php';
-                }
-            }
+                } else if (result.status === 'login_required') { window.location.href = 'login.php'; }
+            } catch (err) {}
         });
     }
 });
 </script>
 
-<?php 
-echo '</div>';
-require_once 'templates/footer.php'; 
-?>
+<?php require_once 'templates/footer.php'; ?>

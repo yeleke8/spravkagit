@@ -1,29 +1,27 @@
 <?php
-// search.php - Продвинутый поиск
+// search.php
 require_once 'templates/header.php';
-require_once 'templates/sidebar.php';
 
-// Получаем параметры из URL
 $q = trim($_GET['q'] ?? '');
 $cat_id = isset($_GET['cat_id']) && is_numeric($_GET['cat_id']) ? (int)$_GET['cat_id'] : 0;
-$sort = $_GET['sort'] ?? 'rating'; // rating | date
+$sort = $_GET['sort'] ?? 'rating';
 
-echo '<div class="col-md-9">';
-
-// --- 1. БЛОК ФИЛЬТРОВ И ПОИСКА ---
+// Сайдбар для поиска (фильтры)
 ?>
-<div class="card shadow-sm border-0 mb-4 bg-light">
-    <div class="card-body">
-        <form action="search.php" method="GET" class="row g-2 align-items-center">
-            <div class="col-md-5">
-                <input type="text" name="q" class="form-control" placeholder="Поиск (название, описание...)" value="<?= h($q) ?>">
+<div class="col-lg-3 mb-4">
+    <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 100px;">
+        <h5 class="fw-bold mb-4">Фильтры</h5>
+        <form action="search.php" method="GET">
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">Поиск</label>
+                <input type="text" name="q" class="form-control bg-light border-0" value="<?= h($q) ?>" placeholder="Название...">
             </div>
             
-            <div class="col-md-3">
-                <select name="cat_id" class="form-select">
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">Категория</label>
+                <select name="cat_id" class="form-select bg-light border-0">
                     <option value="0">Все категории</option>
                     <?php
-                    // Получаем все категории для фильтра (можно оптимизировать, но пока так)
                     $catsStmt = $pdo->query("SELECT * FROM categories ORDER BY cat_name");
                     while($c = $catsStmt->fetch()) {
                         $selected = ($c['cat_id'] == $cat_id) ? 'selected' : '';
@@ -33,103 +31,64 @@ echo '<div class="col-md-9">';
                 </select>
             </div>
 
-            <div class="col-md-2">
-                <select name="sort" class="form-select">
-                    <option value="rating" <?= $sort == 'rating' ? 'selected' : '' ?>>⭐ По рейтингу</option>
-                    <option value="date" <?= $sort == 'date' ? 'selected' : '' ?>>🆕 Сначала новые</option>
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-muted">Сортировка</label>
+                <select name="sort" class="form-select bg-light border-0">
+                    <option value="rating" <?= $sort == 'rating' ? 'selected' : '' ?>>По рейтингу</option>
+                    <option value="date" <?= $sort == 'date' ? 'selected' : '' ?>>Сначала новые</option>
                 </select>
             </div>
 
-            <div class="col-md-2 d-grid">
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-search"></i> Найти</button>
-            </div>
+            <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Применить</button>
+            <a href="search.php" class="btn btn-link text-muted w-100 btn-sm text-decoration-none mt-2">Сбросить</a>
         </form>
     </div>
 </div>
 
+<div class="col-lg-9">
 <?php
-// --- 2. ЛОГИКА ПОИСКА ---
-
 if (mb_strlen($q) < 2 && $cat_id == 0) {
-    echo "<div class='alert alert-info'><i class='fa-solid fa-circle-info'></i> Введите поисковый запрос или выберите категорию.</div>";
+    echo "<div class='alert alert-light border text-center py-5'>Введите запрос или выберите категорию для поиска.</div>";
 } else {
-    // Строим динамический запрос
     $sql = "SELECT p.* FROM post p ";
     $params = [];
-
-    // Если выбрана категория, джойним таблицу связей
-    if ($cat_id > 0) {
-        $sql .= "JOIN s_categories sc ON p.post_id = sc.post_id ";
-    }
-
+    if ($cat_id > 0) $sql .= "JOIN s_categories sc ON p.post_id = sc.post_id ";
     $sql .= "WHERE p.status = 1 ";
 
-    // Условие по тексту (если есть)
     if (!empty($q)) {
-        // 1. Очищаем строку от спецсимволов, оставляем буквы и цифры
         $cleanQ = preg_replace('/[^\p{L}\p{N}\s]/u', '', $q);
-        
-        // 2. Разбиваем на слова
         $words = explode(' ', $cleanQ);
-        $words = array_filter($words, function($w) { return mb_strlen(trim($w)) > 1; }); // Игнорируем буквы-одиночки
-
+        $words = array_filter($words, function($w) { return mb_strlen(trim($w)) > 1; });
         if (!empty($words)) {
-            // 3. Формируем строку для BOOLEAN MODE
-            // Добавляем '+' (обязательно) и '*' (частичное совпадение) к каждому слову
-            // Пример: из "кофе центр" делаем "+кофе* +центр*"
             $booleanQuery = '';
-            foreach ($words as $word) {
-                $booleanQuery .= '+' . trim($word) . '* ';
-            }
-
-            // 4. Используем полнотекстовый поиск
-            // Важно: в базе индекс называется 'title', он включает поля title и psevdonim
+            foreach ($words as $word) $booleanQuery .= '+' . trim($word) . '* ';
             $sql .= "AND MATCH(p.title, p.psevdonim) AGAINST(? IN BOOLEAN MODE) ";
             $params[] = trim($booleanQuery);
         }
     }
-
-    // Условие по категории (если есть)
     if ($cat_id > 0) {
         $sql .= "AND sc.cat_id = ? ";
         $params[] = $cat_id;
     }
-
-    // Группировка (на случай дублей при джойнах, хотя тут не должно быть)
     $sql .= "GROUP BY p.post_id ";
+    if ($sort === 'date') $sql .= "ORDER BY p.created_at DESC";
+    else $sql .= "ORDER BY p.rating_avg DESC, p.rating_count DESC";
 
-    // Сортировка
-    if ($sort === 'date') {
-        $sql .= "ORDER BY p.created_at DESC";
-    } else {
-        $sql .= "ORDER BY p.rating_avg DESC, p.rating_count DESC";
-    }
-
-    // Выполнение
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $posts = $stmt->fetchAll();
-
-    // --- 3. ВЫВОД РЕЗУЛЬТАТОВ ---
     
-    echo "<h4 class='mb-4'>Найдено результатов: " . count($posts) . "</h4>";
+    echo "<h4 class='mb-4 fw-bold'>Результаты поиска <span class='text-muted fw-normal'>(".count($posts).")</span></h4>";
 
     if (empty($posts)) {
-        echo "<div class='text-center py-5'>";
-        echo "<i class='fa-solid fa-magnifying-glass fa-3x text-muted mb-3'></i>";
-        echo "<p class='text-muted'>К сожалению, по вашему запросу ничего не найдено.</p>";
-        echo "<p>Попробуйте изменить параметры поиска или категорию.</p>";
-        echo "</div>";
+        echo "<div class='text-center py-5 text-muted'>Ничего не найдено. Попробуйте другой запрос.</div>";
     } else {
-        echo '<div class="row">';
-        foreach ($posts as $post) {
-            // Используем твой улучшенный card.php
-            include 'templates/card.php';
-        }
+        echo '<div class="row gx-4">';
+        foreach ($posts as $post) include 'templates/card.php';
         echo '</div>';
     }
 }
-
-echo '</div>'; // col-md-9
-require_once 'templates/footer.php';
 ?>
+</div>
+
+<?php require_once 'templates/footer.php'; ?>
