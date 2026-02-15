@@ -71,9 +71,11 @@ if (!$category) {
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1 small text-muted">
-                    <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Главная</a></li>
+                    <!-- Исправлено: href="/" -->
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Главная</a></li>
                     <?php if ($parent): ?>
-                        <li class="breadcrumb-item"><a href="category.php?slug=<?= h($parent['cat_slug']) ?>" class="text-decoration-none"><?= h($parent['cat_name']) ?></a></li>
+                        <!-- Исправлено: ЧПУ -->
+                        <li class="breadcrumb-item"><a href="/category/<?= h($parent['cat_slug']) ?>" class="text-decoration-none"><?= h($parent['cat_name']) ?></a></li>
                     <?php endif; ?>
                     <li class="breadcrumb-item active"><?= h($category['cat_name']) ?></li>
                 </ol>
@@ -82,6 +84,11 @@ if (!$category) {
         </div>
 
         <form method="GET" class="d-flex align-items-center mt-3 mt-md-0">
+            <!-- Здесь slug не нужен в input, он в URL. Но для сохранения параметров при смене сортировки через GET форму,
+                 браузер перезагрузит страницу как ?slug=...&sort=... 
+                 Поскольку у нас RewriteRule ^category/(.*) -> category.php?slug=$1, это допустимо, 
+                 но лучше сделать JS reload или ссылки. Оставим форму рабочей, .htaccess это обработает. 
+            -->
             <input type="hidden" name="slug" value="<?= h($slug) ?>">
             <select name="sort" class="form-select border-0 bg-light fw-medium" onchange="this.form.submit()">
                 <option value="rating" <?= $sort == 'rating' ? 'selected' : '' ?>>По рейтингу</option>
@@ -95,7 +102,8 @@ if (!$category) {
     <?php if (!empty($subcategories)): ?>
         <div class="mb-4 d-flex flex-wrap gap-2">
             <?php foreach ($subcategories as $sub): ?>
-                <a href="category.php?slug=<?= h($sub['cat_slug']) ?>" class="btn btn-white border shadow-sm rounded-pill btn-sm px-3 hover-shadow">
+                <!-- Исправлено: ЧПУ -->
+                <a href="/category/<?= h($sub['cat_slug']) ?>" class="btn btn-white border shadow-sm rounded-pill btn-sm px-3 hover-shadow">
                     <?= h($sub['cat_name']) ?>
                 </a>
             <?php endforeach; ?>
@@ -121,16 +129,17 @@ if (!$category) {
     <?php if ($total_pages > 1): ?>
         <nav class="mt-5">
             <ul class="pagination justify-content-center">
+                <!-- Исправлены ссылки пагинации на абсолютные ЧПУ, чтобы не терять текущий путь -->
                 <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                    <a class="page-link rounded-pill px-3 me-2" href="?slug=<?= $slug ?>&sort=<?= $sort ?>&page=<?= $page - 1 ?>">Назад</a>
+                    <a class="page-link rounded-pill px-3 me-2" href="/category/<?= $slug ?>?sort=<?= $sort ?>&page=<?= $page - 1 ?>">Назад</a>
                 </li>
                 <?php for ($i = 1; $i <= $total_pages; $i++): ?>
                     <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
-                        <a class="page-link rounded-circle mx-1" href="?slug=<?= $slug ?>&sort=<?= $sort ?>&page=<?= $i ?>" style="width: 40px; height: 40px; text-align: center; line-height: 25px;"><?= $i ?></a>
+                        <a class="page-link rounded-circle mx-1" href="/category/<?= $slug ?>?sort=<?= $sort ?>&page=<?= $i ?>" style="width: 40px; height: 40px; text-align: center; line-height: 25px;"><?= $i ?></a>
                     </li>
                 <?php endfor; ?>
                 <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
-                    <a class="page-link rounded-pill px-3 ms-2" href="?slug=<?= $slug ?>&sort=<?= $sort ?>&page=<?= $page + 1 ?>">Вперед</a>
+                    <a class="page-link rounded-pill px-3 ms-2" href="/category/<?= $slug ?>?sort=<?= $sort ?>&page=<?= $page + 1 ?>">Вперед</a>
                 </li>
             </ul>
         </nav>

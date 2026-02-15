@@ -29,7 +29,7 @@ if (!isset($sidebarCategories)) {
     <h6 class="text-uppercase text-muted fw-bold small mb-3 px-2 ls-1">Категории</h6>
     
     <div class="list-group list-group-flush">
-        <a href="search.php" class="list-group-item list-group-item-action d-flex align-items-center">
+        <a href="/search" class="list-group-item list-group-item-action d-flex align-items-center">
             <i class="fa-solid fa-layer-group me-3" style="width: 20px;"></i> Все места
         </a>
         
@@ -37,6 +37,7 @@ if (!isset($sidebarCategories)) {
             $icon = $catIcons[$cat['cat_slug']] ?? 'fa-circle';
             $isActive = ($currentSlug === $cat['cat_slug']);
         ?>
+        <!-- Ссылки уже были корректны с /category/, но на всякий случай проверяем -->
         <a href="/category/<?= h($cat['cat_slug']) ?>" 
            class="list-group-item list-group-item-action d-flex align-items-center <?= $isActive ? 'active' : '' ?>">
             <i class="fa-solid <?= $icon ?> me-3" style="width: 20px; text-align: center;"></i> 
@@ -50,6 +51,7 @@ if (!isset($sidebarCategories)) {
     
     <div class="mt-4 p-3 bg-light rounded-3 text-center border border-dashed">
         <p class="small text-muted mb-2">Владелец бизнеса?</p>
-        <a href="/add.php" class="btn btn-outline-primary btn-sm w-100 fw-bold">Добавить место</a>
+        <!-- Исправлено: ссылка на add без .php -->
+        <a href="/add" class="btn btn-outline-primary btn-sm w-100 fw-bold">Добавить место</a>
     </div>
 </div>

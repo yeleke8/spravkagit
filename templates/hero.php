@@ -16,7 +16,8 @@
             </p>
             
             <div class="w-100" style="max-width: 700px;">
-                <form action="search.php" method="GET" class="position-relative">
+                <!-- Исправлено: action="/search" -->
+                <form action="/search" method="GET" class="position-relative">
                     <input type="text" name="q" 
                            class="form-control form-control-lg border-0 shadow-lg rounded-pill py-3 ps-4 pe-5" 
                            placeholder="Что вы ищете? Например: плов, отель, аптека..." required>
@@ -28,9 +29,10 @@
             </div>
             
             <div class="mt-4 d-flex flex-wrap justify-content-center gap-2">
-                <a href="search.php?q=кофе" class="btn btn-sm btn-white bg-white bg-opacity-10 hover-white text-white border-0 rounded-pill backdrop-blur px-3">☕ Кофе</a>
-                <a href="category.php?slug=food" class="btn btn-sm btn-white bg-white bg-opacity-10 hover-white text-white border-0 rounded-pill backdrop-blur px-3">🍔 Еда</a>
-                <a href="category.php?slug=hotels" class="btn btn-sm btn-white bg-white bg-opacity-10 hover-white text-white border-0 rounded-pill backdrop-blur px-3">🏨 Отели</a>
+                <!-- Исправлены ссылки на ЧПУ -->
+                <a href="/search?q=кофе" class="btn btn-sm btn-white bg-white bg-opacity-10 hover-white text-white border-0 rounded-pill backdrop-blur px-3">☕ Кофе</a>
+                <a href="/category/food" class="btn btn-sm btn-white bg-white bg-opacity-10 hover-white text-white border-0 rounded-pill backdrop-blur px-3">🍔 Еда</a>
+                <a href="/category/hotels" class="btn btn-sm btn-white bg-white bg-opacity-10 hover-white text-white border-0 rounded-pill backdrop-blur px-3">🏨 Отели</a>
             </div>
         </div>
     </div>

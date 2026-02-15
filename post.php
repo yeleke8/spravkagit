@@ -52,8 +52,9 @@ if (is_logged_in()) {
 <!-- Левая колонка: Навигация -->
 <div class="col-lg-2 d-none d-lg-block">
     <div class="sticky-top" style="top: 100px;">
-        <a href="index.php" class="btn btn-light w-100 text-start mb-2 rounded-pill"><i class="fa-solid fa-arrow-left me-2"></i> Главная</a>
-        <a href="search.php" class="btn btn-light w-100 text-start mb-2 rounded-pill"><i class="fa-solid fa-search me-2"></i> Поиск</a>
+        <!-- Исправлены ссылки на ЧПУ -->
+        <a href="/" class="btn btn-light w-100 text-start mb-2 rounded-pill"><i class="fa-solid fa-arrow-left me-2"></i> Главная</a>
+        <a href="/search" class="btn btn-light w-100 text-start mb-2 rounded-pill"><i class="fa-solid fa-search me-2"></i> Поиск</a>
         <hr>
         <div class="text-muted small px-2">Категория</div>
         <?php 
@@ -63,7 +64,8 @@ if (is_logged_in()) {
            $pCat = $stmtCat->fetch();
         ?>
         <?php if($pCat): ?>
-            <a href="category.php?slug=<?= $pCat['cat_slug'] ?>" class="fw-bold text-decoration-none d-block px-2 mt-1"><?= h($pCat['cat_name']) ?></a>
+            <!-- Исправлена ссылка на ЧПУ -->
+            <a href="/category/<?= h($pCat['cat_slug']) ?>" class="fw-bold text-decoration-none d-block px-2 mt-1"><?= h($pCat['cat_name']) ?></a>
         <?php endif; ?>
     </div>
 </div>
@@ -154,7 +156,8 @@ if (is_logged_in()) {
                 <div class="card border-0 shadow-sm mb-4 bg-primary bg-opacity-10">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3">Оставьте свой отзыв</h6>
-                        <form action="add-comment.php" method="POST">
+                        <!-- Исправлено на /add-comment.php -->
+                        <form action="/add-comment.php" method="POST">
                             <input type="hidden" name="post_id" value="<?= $post['post_id'] ?>">
                             <div class="mb-3">
                                 <div class="rating-input d-flex gap-2 fs-3 text-warning mb-2" style="cursor: pointer;">
@@ -176,7 +179,8 @@ if (is_logged_in()) {
             <?php endif; ?>
         <?php else: ?>
             <div class="alert alert-light border text-center py-4">
-                <a href="login.php" class="fw-bold">Войдите</a>, чтобы оставить отзыв.
+                <!-- Исправлено на /login -->
+                <a href="/login" class="fw-bold">Войдите</a>, чтобы оставить отзыв.
             </div>
         <?php endif; ?>
 
@@ -272,7 +276,8 @@ if (is_logged_in()) {
             
             <?php if($_SESSION['user_type'] === 'admin' || ($_SESSION['user_type'] === 'owner' && $post['owner_id'] == $_SESSION['user_id'])): ?>
                 <div class="mt-4 pt-3 border-top text-center">
-                    <a href="edit.php?id=<?= $post['post_id'] ?>" class="btn btn-secondary w-100 btn-sm">Редактировать</a>
+                    <!-- Исправлено на /edit.php -->
+                    <a href="/edit.php?id=<?= $post['post_id'] ?>" class="btn btn-secondary w-100 btn-sm">Редактировать</a>
                 </div>
             <?php endif; ?>
         </div>
@@ -291,6 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const textSpan = this.querySelector('.btn-text');
             
             try {
+                // Исправлено: добавлен слеш
                 let response = await fetch('/ajax-favorite.php', { method: 'POST', body: JSON.stringify({id: postId}) });
                 let result = await response.json();
                 if (result.status === 'success') {
@@ -303,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.classList.remove('btn-danger'); this.classList.add('btn-outline-danger');
                         if(textSpan) textSpan.textContent = 'В избранное';
                     }
-                } else if (result.status === 'login_required') { window.location.href = 'login.php'; }
+                } else if (result.status === 'login_required') { window.location.href = '/login'; }
             } catch (err) {}
         });
     }

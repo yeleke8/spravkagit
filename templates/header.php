@@ -25,6 +25,7 @@ if (is_logged_in()) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Добавлен слеш в начале пути, чтобы стили не слетали на внутренних страницах -->
     <link rel="stylesheet" href="/assets/style.css">
     
     <style>
@@ -47,7 +48,8 @@ if (is_logged_in()) {
 <!-- Navbar Full Width -->
 <nav class="navbar navbar-expand-lg navbar-light fixed-top border-bottom">
     <div class="container-fluid px-4 px-lg-5">
-        <a class="navbar-brand text-primary fs-4 me-4" href="/index">
+        <!-- Ссылка на главную через / -->
+        <a class="navbar-brand text-primary fs-4 me-4" href="/">
             <i class="fa-solid fa-map-location-dot"></i> Spravka<span class="text-dark">.kz</span>
         </a>
 
@@ -56,8 +58,8 @@ if (is_logged_in()) {
         </button>
 
         <div class="collapse navbar-collapse" id="navbarContent">
-            <!-- Поиск в шапке -->
-            <form class="d-flex mx-lg-auto my-2 my-lg-0 col-lg-5" action="search" method="GET">
+            <!-- Поиск в шапке: action="/search" (абсолютный путь) -->
+            <form class="d-flex mx-lg-auto my-2 my-lg-0 col-lg-5" action="/search" method="GET">
                 <div class="input-group bg-light rounded-pill border px-2 py-1 w-100">
                     <span class="input-group-text bg-transparent border-0 text-muted"><i class="fa-solid fa-search"></i></span>
                     <input class="form-control bg-transparent border-0 shadow-none" type="search" name="q" placeholder="Поиск мест, услуг, товаров..." value="<?= isset($_GET['q']) ? h($_GET['q']) : '' ?>">
@@ -65,7 +67,7 @@ if (is_logged_in()) {
             </form>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center fw-medium">
-                <li class="nav-item px-2"><a class="nav-link" href="/index">Главная</a></li>
+                <li class="nav-item px-2"><a class="nav-link" href="/">Главная</a></li>
                 <li class="nav-item px-2"><a class="nav-link" href="/search?sort=rating">Рейтинг</a></li>
                 <li class="nav-item px-2"><a class="nav-link" href="/search?sort=date">Новинки</a></li>
 
