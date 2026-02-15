@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Основной цвет фона (темно-серый, под стиль приборной панели) -->
+    <solid android:color="#7FFB0000" />
+
+    <!-- Закругление углов -->
+    <corners android:radius="16dp" />
+
+    <!-- Тонкая рамка, чтобы блок выделялся -->
+    <stroke
+        android:width="1dp"
+        android:color="#54BC4141" />
+</shape>
