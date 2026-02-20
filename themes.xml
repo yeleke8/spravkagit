@@ -1,9 +1,12 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Spravka" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Основная тема приложения -->
+    <!-- Используем родительскую тему .NoActionBar, чтобы скрыть тулбар на уровне системы -->
+    <style name="Theme.MyGentraThree" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Кастомизация статус-бара и фона для автомобильного интерфейса -->
+        <item name="colorPrimary">#00FF00</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowBackground">#000000</item>
     </style>
-
-    <style name="Theme.Spravka" parent="Base.Theme.Spravka" />
 </resources>
