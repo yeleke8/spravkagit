@@ -2,30 +2,44 @@
 require_once 'headers.php';
 
 try {
-    // Бас категорияларды алу
-    $stmt = $pdo->query("SELECT cat_id, cat_name, cat_slug, cat_parent_id FROM categories WHERE cat_parent_id IS NULL ORDER BY cat_id ASC");
-    $parents = $stmt->fetchAll();
+    // ОДИН запрос для получения ВСЕХ категорий сразу (решение проблемы N+1 запроса)
+    // Сортируем так, чтобы сначала шли родители (NULL), а затем дети
+    $stmt = $pdo->query("SELECT cat_id, cat_name, cat_slug, cat_parent_id FROM categories ORDER BY cat_parent_id ASC, cat_id ASC");
+    $allCategories = $stmt->fetchAll();
 
     $result = [];
-    foreach ($parents as $parent) {
-        // Подкатегорияларды алу
-        $stmtSub = $pdo->prepare("SELECT cat_id, cat_name, cat_slug FROM categories WHERE cat_parent_id = ?");
-        $stmtSub->execute([$parent['cat_id']]);
-        $subs = $stmtSub->fetchAll();
+    $subCategories = [];
 
-        // Иконкаларды анықтау (Android үшін)
-        $icon = "ic_default"; // Android-тағы drawable аты
-        // Мұнда logic қосуға болады: if ($parent['cat_slug'] == 'food') $icon = 'ic_food';
-
-        $result[] = [
-            'id' => $parent['cat_id'],
-            'name' => $parent['cat_name'],
-            'slug' => $parent['cat_slug'],
-            'subcategories' => $subs
-        ];
+    // Разделяем на главные категории и подкатегории
+    foreach ($allCategories as $cat) {
+        if ($cat['cat_parent_id'] === null) {
+            $result[$cat['cat_id']] = [
+                'id' => $cat['cat_id'],
+                'name' => $cat['cat_name'],
+                'slug' => $cat['cat_slug'],
+                'subcategories' => []
+            ];
+        } else {
+            $subCategories[] = $cat;
+        }
     }
 
-    response(true, 'Категориялар', $result);
+    // Прикрепляем подкатегории к их родителям (быстрая операция в оперативной памяти сервера)
+    foreach ($subCategories as $sub) {
+        $parentId = $sub['cat_parent_id'];
+        if (isset($result[$parentId])) {
+            $result[$parentId]['subcategories'][] = [
+                'id' => $sub['cat_id'],
+                'name' => $sub['cat_name'],
+                'slug' => $sub['cat_slug']
+            ];
+        }
+    }
+
+    // Сбрасываем ключи ассоциативного массива, чтобы на выходе получился правильный JSON-массив [...]
+    $finalResult = array_values($result);
+
+    response(true, 'Категориялар', $finalResult);
 
 } catch (Exception $e) {
     response(false, $e->getMessage());

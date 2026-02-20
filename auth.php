@@ -4,8 +4,6 @@ require_once 'headers.php';
 $action = $_GET['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    // Android-тан келетін JSON деректерді оқу
     $input = json_decode(file_get_contents('php://input'), true);
 
     // --- КІРУ (LOGIN) ---
@@ -20,15 +18,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            // Жаңа Token генерациялау
-            $newToken = bin2hex(random_bytes(32));
-            $pdo->prepare("UPDATE users SET api_key = ? WHERE user_id = ?")->execute([$newToken, $user['user_id']]);
+            // Генерируем безопасный JWT токен
+            $jwt = generate_jwt($user['user_id'], $user['user_type']);
+            
+            // Записываем дату последнего онлайна
+            $pdo->prepare("UPDATE users SET lastonline = NOW() WHERE user_id = ?")->execute([$user['user_id']]);
             
             response(true, 'Сәтті кірдіңіз', [
                 'user_id' => $user['user_id'],
                 'name' => $user['user_name'],
-                'token' => $newToken,
-                'avatar' => null // Егер аватар болса қосуға болады
+                'user_type' => $user['user_type'],
+                'token' => $jwt
             ]);
         } else {
             response(false, 'Қате логин немесе пароль');
@@ -45,27 +45,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mb_strlen($login) < 4) response(false, 'Логин тым қысқа');
         if (mb_strlen($password) < 6) response(false, 'Пароль тым қысқа');
 
-        // Логин тексеру
+        $cleanPhone = preg_replace('/[^0-9+]/', '', $phone);
+        if (!preg_match('/^\+?[0-9]{10,15}$/', $cleanPhone)) {
+             response(false, 'Қате телефон нөмірі');
+        }
+
         $stmt = $pdo->prepare("SELECT user_id FROM users WHERE login = ?");
         $stmt->execute([$login]);
         if ($stmt->fetch()) response(false, 'Бұл логин бос емес');
 
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $token = bin2hex(random_bytes(32));
 
         try {
-            $sql = "INSERT INTO users (login, password, user_name, user_phone, user_type, api_key, registereddate) VALUES (?, ?, ?, ?, 'user', ?, NOW())";
+            $sql = "INSERT INTO users (login, password, user_name, user_phone, user_type, registereddate) VALUES (?, ?, ?, ?, 'user', NOW())";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$login, $hash, $name, $phone, $token]);
+            $stmt->execute([$login, $hash, $name, $cleanPhone]);
+            
+            $new_user_id = $pdo->lastInsertId();
+            $jwt = generate_jwt($new_user_id, 'user');
             
             response(true, 'Тіркелу сәтті өтті', [
-                'token' => $token,
-                'name' => $name
+                'token' => $jwt,
+                'name' => $name,
+                'user_type' => 'user'
             ]);
         } catch (Exception $e) {
-            response(false, 'Дерекқор қатесі');
+            response(false, 'Дерекқор қатесі: ' . $e->getMessage());
         }
+    } else {
+        response(false, 'Invalid action');
     }
+} else {
+    response(false, 'Method Not Allowed');
 }
-response(false, 'Action required');
 ?>
