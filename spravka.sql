@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3306
--- Время создания: Фев 20 2026 г., 23:54
+-- Время создания: Фев 21 2026 г., 00:02
 -- Версия сервера: 10.4.26-MariaDB
 -- Версия PHP: 7.2.34
 
@@ -257,6 +257,22 @@ INSERT INTO `post` (`post_id`, `title`, `psevdonim`, `slug`, `description`, `add
 -- --------------------------------------------------------
 
 --
+-- Структура таблицы `reports`
+--
+
+CREATE TABLE `reports` (
+  `report_id` int(11) NOT NULL,
+  `reporter_id` int(11) NOT NULL,
+  `target_id` int(11) NOT NULL COMMENT 'ID поста или комментария',
+  `target_type` enum('post','comment') NOT NULL,
+  `reason` text NOT NULL,
+  `status` enum('pending','reviewed','dismissed') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Структура таблицы `s_categories`
 --
 
@@ -401,19 +417,34 @@ CREATE TABLE `users` (
   `user_phone` varchar(255) NOT NULL COMMENT 'Номер телефона',
   `registereddate` datetime DEFAULT current_timestamp() COMMENT 'Дата регистраций',
   `lastonline` datetime DEFAULT current_timestamp() COMMENT 'В сети',
-  `api_key` varchar(255) NOT NULL
+  `api_key` varchar(255) NOT NULL,
+  `refresh_token` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Дамп данных таблицы `users`
 --
 
-INSERT INTO `users` (`user_id`, `login`, `password`, `user_type`, `user_name`, `user_phone`, `registereddate`, `lastonline`, `api_key`) VALUES
-(1, 'user', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 1', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', ''),
-(2, 'admin', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'admin', 'Админ', '+77011112233', '2026-02-11 10:20:18', '2026-02-14 19:15:26', ''),
-(3, 'owner', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'owner', 'Бизнесмен 1', '+77025556677', '2026-02-11 10:20:18', '2026-02-14 19:01:42', ''),
-(4, 'user2', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 2', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', ''),
-(6, 'user3', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 3', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '');
+INSERT INTO `users` (`user_id`, `login`, `password`, `user_type`, `user_name`, `user_phone`, `registereddate`, `lastonline`, `api_key`, `refresh_token`) VALUES
+(1, 'user', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 1', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL),
+(2, 'admin', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'admin', 'Админ', '+77011112233', '2026-02-11 10:20:18', '2026-02-14 19:15:26', '', NULL),
+(3, 'owner', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'owner', 'Бизнесмен 1', '+77025556677', '2026-02-11 10:20:18', '2026-02-14 19:01:42', '', NULL),
+(4, 'user2', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 2', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL),
+(6, 'user3', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 3', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `user_devices`
+--
+
+CREATE TABLE `user_devices` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `fcm_token` text NOT NULL,
+  `device_type` varchar(50) DEFAULT 'android',
+  `last_updated` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Индексы сохранённых таблиц
@@ -457,6 +488,13 @@ ALTER TABLE `post`
 ALTER TABLE `post` ADD FULLTEXT KEY `title` (`title`,`psevdonim`);
 
 --
+-- Индексы таблицы `reports`
+--
+ALTER TABLE `reports`
+  ADD PRIMARY KEY (`report_id`),
+  ADD KEY `idx_report_status` (`status`);
+
+--
 -- Индексы таблицы `s_categories`
 --
 ALTER TABLE `s_categories`
@@ -492,6 +530,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `login` (`login`);
 
 --
+-- Индексы таблицы `user_devices`
+--
+ALTER TABLE `user_devices`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_user_devices` (`user_id`);
+
+--
 -- AUTO_INCREMENT для сохранённых таблиц
 --
 
@@ -520,6 +565,12 @@ ALTER TABLE `post`
   MODIFY `post_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
+-- AUTO_INCREMENT для таблицы `reports`
+--
+ALTER TABLE `reports`
+  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT для таблицы `s_favorites`
 --
 ALTER TABLE `s_favorites`
@@ -536,6 +587,12 @@ ALTER TABLE `tags`
 --
 ALTER TABLE `users`
   MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT для таблицы `user_devices`
+--
+ALTER TABLE `user_devices`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Ограничения внешнего ключа сохраненных таблиц
@@ -587,6 +644,12 @@ ALTER TABLE `s_favorites`
 ALTER TABLE `s_tags`
   ADD CONSTRAINT `pa_attr_fk` FOREIGN KEY (`attr_id`) REFERENCES `tags` (`attr_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `pa_post_fk` FOREIGN KEY (`post_id`) REFERENCES `post` (`post_id`) ON DELETE CASCADE;
+
+--
+-- Ограничения внешнего ключа таблицы `user_devices`
+--
+ALTER TABLE `user_devices`
+  ADD CONSTRAINT `fk_user_devices` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
