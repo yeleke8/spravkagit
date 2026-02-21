@@ -39,10 +39,24 @@ try {
         $whereClauses[] = "EXISTS (SELECT 1 FROM s_categories sc WHERE sc.post_id = p.post_id AND sc.cat_id IN ($inQuery))";
     }
 
+    // ИСПРАВЛЕНИЕ: Оптимизированный поиск через FULLTEXT индекс
     if (!empty($q)) {
-        $whereClauses[] = "(p.title LIKE ? OR p.psevdonim LIKE ?)";
-        $params[] = "%$q%";
-        $params[] = "%$q%";
+        // Разбиваем поисковый запрос на отдельные слова
+        $words = preg_split('/\s+/', $q);
+        $searchQuery = '';
+        foreach ($words as $word) {
+            if (mb_strlen($word) > 0) {
+                // Плюс (+) означает, что слово обязательно. Звездочка (*) ищет совпадения по началу слова (префиксу).
+                $searchQuery .= '+' . $word . '* ';
+            }
+        }
+        $searchQuery = trim($searchQuery);
+        
+        // Если после фильтрации запрос не пуст, выполняем MATCH AGAINST
+        if (!empty($searchQuery)) {
+            $whereClauses[] = "MATCH(p.title, p.psevdonim) AGAINST(? IN BOOLEAN MODE)";
+            $params[] = $searchQuery;
+        }
     }
 
     if (!empty($tags)) {

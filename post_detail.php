@@ -11,12 +11,21 @@ $user_id = 0;
 
 if (!$id) response(false, 'ID required');
 
-$headers = getallheaders();
 $token = '';
-if (isset($headers['Authorization'])) {
-    $token = str_replace('Bearer ', '', $headers['Authorization']);
-} elseif (isset($_GET['api_key'])) {
-    $token = $_GET['api_key'];
+// ИСПРАВЛЕНИЕ: Получение токена без вызова getallheaders() для совместимости с Nginx
+if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+    $token = trim(str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']));
+} elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+    $token = trim(str_replace('Bearer ', '', $_SERVER['REDIRECT_HTTP_AUTHORIZATION']));
+} elseif (function_exists('getallheaders')) {
+    $headers = getallheaders();
+    if (isset($headers['Authorization'])) {
+        $token = trim(str_replace('Bearer ', '', $headers['Authorization']));
+    }
+}
+
+if (!$token && isset($_GET['api_key'])) {
+    $token = trim($_GET['api_key']);
 }
 
 if ($token) {

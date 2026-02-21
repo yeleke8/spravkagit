@@ -6,6 +6,9 @@ header("Access-Control-Allow-Methods: POST, GET");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+// Устанавливаем часовой пояс, чтобы время работы заведений (time()) и дата отзывов (NOW()) совпадали
+date_default_timezone_set('Asia/Almaty');
+
 require_once __DIR__ . '/../back/db.php';
 
 $baseUrl = "https://fervent-williams.195-210-46-54.plesk.page/spravka/";
@@ -42,13 +45,22 @@ function generate_jwt($user_id, $user_type) {
 }
 
 function authenticate($pdo) {
-    $headers = getallheaders();
     $token = '';
     
-    if (isset($headers['Authorization'])) {
-        $token = str_replace('Bearer ', '', $headers['Authorization']);
-    } elseif (isset($_GET['api_key'])) {
-        $token = $_GET['api_key'];
+    // ИСПРАВЛЕНИЕ: Надежное получение заголовка Authorization для Nginx и Apache
+    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $token = trim(str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']));
+    } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $token = trim(str_replace('Bearer ', '', $_SERVER['REDIRECT_HTTP_AUTHORIZATION']));
+    } elseif (function_exists('getallheaders')) {
+        $headers = getallheaders();
+        if (isset($headers['Authorization'])) {
+            $token = trim(str_replace('Bearer ', '', $headers['Authorization']));
+        }
+    }
+
+    if (!$token && isset($_GET['api_key'])) {
+        $token = trim($_GET['api_key']);
     }
 
     if (!$token) response(false, 'Auth token not found', null, ['code' => 401]);
