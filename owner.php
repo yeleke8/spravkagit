@@ -21,6 +21,7 @@ function createSlug($string) {
 try {
     // 1. Получить список своих заведений со статистикой
     if ($action === 'my_places' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        // [Остается как было]
         $sql = "SELECT post_id, title, photo, views, rating_avg, rating_count, status 
                 FROM post 
                 WHERE owner_id = ? AND status != 2 
@@ -44,19 +45,32 @@ try {
 
         if (!$comment_id || empty($reply_text)) response(false, 'Укажите ID комментария и текст ответа');
 
-        $checkSql = "SELECT c.comment_id FROM comments c JOIN post p ON c.post_id = p.post_id WHERE c.comment_id = ? AND p.owner_id = ?";
+        // Ищем комментарий и проверяем владельца
+        $checkSql = "SELECT c.user_id, p.title FROM comments c JOIN post p ON c.post_id = p.post_id WHERE c.comment_id = ? AND p.owner_id = ?";
         $stmtCheck = $pdo->prepare($checkSql);
         $stmtCheck->execute([$comment_id, $user_id]);
-        if (!$stmtCheck->fetch()) response(false, 'Комментарий не найден или вы не владелец');
+        $commentData = $stmtCheck->fetch();
+        
+        if (!$commentData) response(false, 'Комментарий не найден или вы не владелец');
 
+        // Обновляем коммент
         $pdo->prepare("UPDATE comments SET owner_reply = ?, reply_created_at = NOW() WHERE comment_id = ?")->execute([$reply_text, $comment_id]);
+        
+        // --- ОТПРАВЛЯЕМ PUSH УВЕДОМЛЕНИЕ КЛИЕНТУ ---
+        $client_id = $commentData['user_id'];
+        $place_title = $commentData['title'];
+        send_fcm_push($pdo, $client_id, "Ответ от $place_title", "Представитель заведения ответил на ваш отзыв.", [
+            'type' => 'comment_reply',
+            'comment_id' => $comment_id
+        ]);
+
         response(true, 'Ответ успешно опубликован');
     }
 
     // 3. Добавить новое заведение
     elseif ($action === 'add_place' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // [Остается как было]
         $input = json_decode(file_get_contents('php://input'), true);
-        
         $title = trim($input['title'] ?? '');
         $description = trim($input['description'] ?? '');
         $address = trim($input['address'] ?? '');
@@ -66,36 +80,28 @@ try {
         $worktime = json_encode($input['worktime'] ?? []);
         $attributes = json_encode($input['attributes'] ?? []);
         $contacts = json_encode($input['contacts'] ?? []);
-        $categories = $input['categories'] ?? []; // Массив ID категорий
-        $tags = $input['tags'] ?? []; // Массив ID тегов
+        $categories = $input['categories'] ?? []; 
+        $tags = $input['tags'] ?? []; 
 
         if (empty($title) || empty($address)) response(false, 'Название и адрес обязательны');
 
-        $slug = createSlug($title) . '-' . time(); // Уникальный slug
+        $slug = createSlug($title) . '-' . time();
 
         $pdo->beginTransaction();
 
         $sql = "INSERT INTO post (title, slug, psevdonim, description, address, latitude, longitude, worktime, photo, owner_id, attributes, contacts, status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"; // status 0 = на модерации
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"; // 0 = на модерации
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$title, $slug, $title, $description, $address, $lat, $lng, $worktime, $photo, $user_id, $attributes, $contacts]);
-        
         $post_id = $pdo->lastInsertId();
 
-        // Добавляем категории
         if (!empty($categories)) {
             $catStmt = $pdo->prepare("INSERT IGNORE INTO s_categories (post_id, cat_id) VALUES (?, ?)");
-            foreach ($categories as $cat_id) {
-                $catStmt->execute([$post_id, (int)$cat_id]);
-            }
+            foreach ($categories as $cat_id) { $catStmt->execute([$post_id, (int)$cat_id]); }
         }
-
-        // Добавляем теги
         if (!empty($tags)) {
             $tagStmt = $pdo->prepare("INSERT IGNORE INTO s_tags (post_id, attr_id) VALUES (?, ?)");
-            foreach ($tags as $tag_id) {
-                $tagStmt->execute([$post_id, (int)$tag_id]);
-            }
+            foreach ($tags as $tag_id) { $tagStmt->execute([$post_id, (int)$tag_id]); }
         }
 
         $pdo->commit();
@@ -104,16 +110,17 @@ try {
 
     // 4. Редактировать заведение
     elseif ($action === 'edit_place' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // [Остается как было]
         $input = json_decode(file_get_contents('php://input'), true);
         $post_id = (int)($input['post_id'] ?? 0);
 
         if (!$post_id) response(false, 'Укажите ID заведения');
 
-        // Проверка владельца
         $stmtCheck = $pdo->prepare("SELECT post_id FROM post WHERE post_id = ? AND owner_id = ?");
         $stmtCheck->execute([$post_id, $user_id]);
         if (!$stmtCheck->fetch()) response(false, 'Доступ запрещен');
 
+        // ... [Остальной код обновления заведения без изменений] ...
         $title = trim($input['title'] ?? '');
         $description = trim($input['description'] ?? '');
         $address = trim($input['address'] ?? '');
@@ -131,22 +138,16 @@ try {
         $sql = "UPDATE post SET title=?, description=?, address=?, latitude=?, longitude=?, worktime=?, photo=?, attributes=?, contacts=? WHERE post_id=?";
         $pdo->prepare($sql)->execute([$title, $description, $address, $lat, $lng, $worktime, $photo, $attributes, $contacts, $post_id]);
 
-        // Обновляем категории, если переданы
         if (is_array($categories)) {
             $pdo->prepare("DELETE FROM s_categories WHERE post_id = ?")->execute([$post_id]);
             $catStmt = $pdo->prepare("INSERT IGNORE INTO s_categories (post_id, cat_id) VALUES (?, ?)");
-            foreach ($categories as $cat_id) {
-                $catStmt->execute([$post_id, (int)$cat_id]);
-            }
+            foreach ($categories as $cat_id) { $catStmt->execute([$post_id, (int)$cat_id]); }
         }
 
-        // Обновляем теги, если переданы
         if (is_array($tags)) {
             $pdo->prepare("DELETE FROM s_tags WHERE post_id = ?")->execute([$post_id]);
             $tagStmt = $pdo->prepare("INSERT IGNORE INTO s_tags (post_id, attr_id) VALUES (?, ?)");
-            foreach ($tags as $tag_id) {
-                $tagStmt->execute([$post_id, (int)$tag_id]);
-            }
+            foreach ($tags as $tag_id) { $tagStmt->execute([$post_id, (int)$tag_id]); }
         }
 
         $pdo->commit();
@@ -155,6 +156,7 @@ try {
 
     // 5. Удалить/Скрыть заведение (Архивация)
     elseif ($action === 'delete_place' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // [Остается как было]
         $input = json_decode(file_get_contents('php://input'), true);
         $post_id = (int)($input['post_id'] ?? 0);
 
@@ -164,7 +166,6 @@ try {
         $stmtCheck->execute([$post_id, $user_id]);
         if (!$stmtCheck->fetch()) response(false, 'Доступ запрещен');
 
-        // Меняем статус на 2 (Удален/Архив)
         $pdo->prepare("UPDATE post SET status = 2 WHERE post_id = ?")->execute([$post_id]);
         response(true, 'Заведение удалено');
     }

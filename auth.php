@@ -19,13 +19,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($user && password_verify($password, $user['password'])) {
             $jwt = generate_jwt($user['user_id'], $user['user_type']);
-            $pdo->prepare("UPDATE users SET lastonline = NOW() WHERE user_id = ?")->execute([$user['user_id']]);
+            $refresh_token = generate_refresh_token(); // Генерируем новый рефреш
+
+            $pdo->prepare("UPDATE users SET lastonline = NOW(), refresh_token = ? WHERE user_id = ?")->execute([$refresh_token, $user['user_id']]);
             
             response(true, 'Сәтті кірдіңіз', [
                 'user_id' => $user['user_id'],
                 'name' => $user['user_name'],
                 'user_type' => $user['user_type'],
-                'token' => $jwt
+                'token' => $jwt,
+                'refresh_token' => $refresh_token
             ]);
         } else {
             response(false, 'Қате логин немесе пароль');
@@ -54,24 +57,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
         try {
-            $sql = "INSERT INTO users (login, password, user_name, user_phone, user_type, registereddate) VALUES (?, ?, ?, ?, 'user', NOW())";
+            $refresh_token = generate_refresh_token();
+
+            $sql = "INSERT INTO users (login, password, user_name, user_phone, user_type, registereddate, refresh_token) VALUES (?, ?, ?, ?, 'user', NOW(), ?)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$login, $hash, $name, $cleanPhone]);
+            $stmt->execute([$login, $hash, $name, $cleanPhone, $refresh_token]);
             
             $new_user_id = $pdo->lastInsertId();
             $jwt = generate_jwt($new_user_id, 'user');
             
             response(true, 'Тіркелу сәтті өтті', [
-                'token' => $jwt,
+                'user_id' => $new_user_id,
                 'name' => $name,
-                'user_type' => 'user'
+                'user_type' => 'user',
+                'token' => $jwt,
+                'refresh_token' => $refresh_token
             ]);
         } catch (Exception $e) {
             response(false, 'Дерекқор қатесі: ' . $e->getMessage());
         }
     } 
+
+    // --- ОБНОВЛЕНИЕ СЕССИИ (REFRESH TOKEN) ---
+    elseif ($action === 'refresh') {
+        $refresh_token = $input['refresh_token'] ?? '';
+        
+        if (empty($refresh_token)) response(false, 'Refresh token required', null, ['code' => 400]);
+
+        $stmt = $pdo->prepare("SELECT user_id, user_type FROM users WHERE refresh_token = ?");
+        $stmt->execute([$refresh_token]);
+        $user = $stmt->fetch();
+
+        if ($user) {
+            // Генерируем новую пару
+            $new_jwt = generate_jwt($user['user_id'], $user['user_type']);
+            $new_refresh = generate_refresh_token();
+
+            // Обновляем в базе (Security: старый refresh_token перестает действовать)
+            $pdo->prepare("UPDATE users SET refresh_token = ?, lastonline = NOW() WHERE user_id = ?")->execute([$new_refresh, $user['user_id']]);
+
+            response(true, 'Token refreshed', [
+                'token' => $new_jwt,
+                'refresh_token' => $new_refresh
+            ]);
+        } else {
+            response(false, 'Invalid or expired refresh token. Please login again.', null, ['code' => 401]);
+        }
+    }
     
-    // --- СБРОС ПАРОЛЯ (RESET PASSWORD STUB) ---
+    // --- СБРОС ПАРОЛЯ ---
     elseif ($action === 'reset_password') {
         $login = trim($input['login'] ?? '');
         if (!$login) response(false, 'Введите логин');
@@ -84,15 +118,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             response(false, 'Пользователь с таким логином не найден');
         }
 
-        // В реальном проекте здесь вы отправляете SMS с кодом или email.
-        // Так как инфраструктуры для SMS нет, генерируем временный пароль и отдаем в ответ (для теста).
         $new_password = rand(100000, 999999);
         $hash = password_hash((string)$new_password, PASSWORD_DEFAULT);
         
-        $pdo->prepare("UPDATE users SET password = ? WHERE user_id = ?")->execute([$hash, $user['user_id']]);
+        // Инвалидируем текущие сессии (удаляем refresh_token)
+        $pdo->prepare("UPDATE users SET password = ?, refresh_token = NULL WHERE user_id = ?")->execute([$hash, $user['user_id']]);
 
         response(true, "Сброс успешен (ДЕМО). Ваш новый пароль: $new_password", [
-            'new_password' => $new_password // В продакшене НИКОГДА не возвращайте пароль в API, отправляйте по SMS!
+            'new_password' => $new_password 
         ]);
     } 
     

@@ -12,7 +12,8 @@ $action = $_GET['action'] ?? '';
 try {
     // 1. Получение списка жалоб
     if ($action === 'get_reports' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-        $status = $_GET['status'] ?? 'pending'; // pending, reviewed, dismissed
+        // ... [Без изменений] ...
+        $status = $_GET['status'] ?? 'pending';
         $sql = "SELECT r.*, u.user_name as reporter_name 
                 FROM reports r 
                 JOIN users u ON r.reporter_id = u.user_id 
@@ -24,19 +25,18 @@ try {
 
     // 2. Изменение статуса жалобы
     elseif ($action === 'update_report' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // ... [Без изменений] ...
         $input = json_decode(file_get_contents('php://input'), true);
         $report_id = (int)($input['report_id'] ?? 0);
-        $status = $input['status'] ?? ''; // reviewed, dismissed
+        $status = $input['status'] ?? ''; 
 
-        if (!$report_id || !in_array($status, ['reviewed', 'dismissed'])) {
-            response(false, 'Неверные данные');
-        }
+        if (!$report_id || !in_array($status, ['reviewed', 'dismissed'])) response(false, 'Неверные данные');
 
         $pdo->prepare("UPDATE reports SET status = ? WHERE report_id = ?")->execute([$status, $report_id]);
         response(true, 'Статус жалобы обновлен');
     }
 
-    // 3. Модерация заведений (публикация черновиков владельцев)
+    // 3. Модерация заведений
     elseif ($action === 'moderate_places' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         $sql = "SELECT post_id, title, address, created_at, status FROM post WHERE status = 0 ORDER BY created_at DESC";
         $stmt = $pdo->query($sql);
@@ -49,8 +49,24 @@ try {
         $post_id = (int)($input['post_id'] ?? 0);
         $approve = isset($input['approve']) ? (bool)$input['approve'] : true;
 
+        // Получаем информацию о владельце для пуша
+        $stmtInfo = $pdo->prepare("SELECT owner_id, title FROM post WHERE post_id = ?");
+        $stmtInfo->execute([$post_id]);
+        $placeData = $stmtInfo->fetch();
+
         $new_status = $approve ? 1 : 2; // 1 - опубликовано, 2 - удалено/отклонено
         $pdo->prepare("UPDATE post SET status = ? WHERE post_id = ?")->execute([$new_status, $post_id]);
+        
+        // --- ОТПРАВКА PUSH УВЕДОМЛЕНИЯ ВЛАДЕЛЬЦУ ---
+        if ($placeData && $placeData['owner_id']) {
+            $msg = $approve ? "Модератор одобрил публикацию." : "Модератор отклонил публикацию.";
+            send_fcm_push($pdo, $placeData['owner_id'], "Статус заведения «{$placeData['title']}» изменен", $msg, [
+                'type' => 'place_moderation',
+                'post_id' => $post_id,
+                'status' => $new_status
+            ]);
+        }
+
         response(true, $approve ? 'Заведение опубликовано' : 'Заведение отклонено');
     }
 
@@ -60,8 +76,9 @@ try {
         response(true, 'Пользователи', $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    // 6. Изменить роль пользователя (сделать владельцем или админом)
+    // 6. Изменить роль пользователя
     elseif ($action === 'change_role' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // ... [Без изменений] ...
         $input = json_decode(file_get_contents('php://input'), true);
         $target_user_id = (int)($input['user_id'] ?? 0);
         $new_role = $input['role'] ?? '';
