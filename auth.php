@@ -18,10 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            // Генерируем безопасный JWT токен
             $jwt = generate_jwt($user['user_id'], $user['user_type']);
-            
-            // Записываем дату последнего онлайна
             $pdo->prepare("UPDATE users SET lastonline = NOW() WHERE user_id = ?")->execute([$user['user_id']]);
             
             response(true, 'Сәтті кірдіңіз', [
@@ -72,7 +69,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             response(false, 'Дерекқор қатесі: ' . $e->getMessage());
         }
-    } else {
+    } 
+    
+    // --- СБРОС ПАРОЛЯ (RESET PASSWORD STUB) ---
+    elseif ($action === 'reset_password') {
+        $login = trim($input['login'] ?? '');
+        if (!$login) response(false, 'Введите логин');
+
+        $stmt = $pdo->prepare("SELECT user_id, user_phone FROM users WHERE login = ?");
+        $stmt->execute([$login]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            response(false, 'Пользователь с таким логином не найден');
+        }
+
+        // В реальном проекте здесь вы отправляете SMS с кодом или email.
+        // Так как инфраструктуры для SMS нет, генерируем временный пароль и отдаем в ответ (для теста).
+        $new_password = rand(100000, 999999);
+        $hash = password_hash((string)$new_password, PASSWORD_DEFAULT);
+        
+        $pdo->prepare("UPDATE users SET password = ? WHERE user_id = ?")->execute([$hash, $user['user_id']]);
+
+        response(true, "Сброс успешен (ДЕМО). Ваш новый пароль: $new_password", [
+            'new_password' => $new_password // В продакшене НИКОГДА не возвращайте пароль в API, отправляйте по SMS!
+        ]);
+    } 
+    
+    else {
         response(false, 'Invalid action');
     }
 } else {
