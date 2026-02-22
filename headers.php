@@ -14,6 +14,7 @@ require_once __DIR__ . '/../back/db.php';
 $baseUrl = "https://fervent-williams.195-210-46-54.plesk.page/spravka/";
 
 // Секретный ключ для JWT (НИКОМУ НЕ ПОКАЗЫВАТЬ)
+// В идеале вынести в переменные окружения (.env)
 define('JWT_SECRET', 'SpravkaSuperSecretKey2026!'); 
 // Firebase Server Key (Для Legacy API) или Bearer токен (для HTTP v1)
 define('FCM_SERVER_KEY', 'YOUR_FIREBASE_SERVER_KEY'); 
@@ -26,6 +27,14 @@ function response($success, $message, $data = null, $extra = []) {
     ], $extra);
     echo json_encode($out, JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+// --- БЕЗОПАСНОЕ ЛОГИРОВАНИЕ ОШИБОК ---
+// Вызывайте эту функцию в блоках catch(), чтобы не отдавать структуру БД клиенту
+function log_server_error($exception, $context = '') {
+    $logMessage = "[" . date('Y-m-d H:i:s') . "] ERROR {$context}: " . $exception->getMessage() . "\n";
+    // Записываем ошибку в файл на уровень выше публичной папки, чтобы его нельзя было скачать по прямой ссылке
+    error_log($logMessage, 3, __DIR__ . '/../server_errors.log');
 }
 
 // --- ФУНКЦИИ JWT И СЕССИЙ ---
