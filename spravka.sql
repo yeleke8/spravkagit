@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3306
--- Время создания: Фев 21 2026 г., 12:41
+-- Время создания: Фев 22 2026 г., 17:42
 -- Версия сервера: 10.4.26-MariaDB
 -- Версия PHP: 7.2.34
 
@@ -412,26 +412,29 @@ INSERT INTO `tags` (`attr_id`, `attr_name`, `attr_icon`) VALUES
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
   `login` varchar(255) NOT NULL COMMENT 'логин',
-  `password` varchar(255) NOT NULL COMMENT 'Пароль',
+  `password` varchar(255) DEFAULT NULL,
   `user_type` enum('admin','user','owner') NOT NULL DEFAULT 'user' COMMENT 'Тип пользователя',
   `user_name` varchar(255) NOT NULL,
-  `user_phone` varchar(255) NOT NULL COMMENT 'Номер телефона',
+  `email` varchar(255) DEFAULT NULL,
+  `google_id` varchar(255) DEFAULT NULL,
+  `user_phone` varchar(255) DEFAULT NULL,
   `registereddate` datetime DEFAULT current_timestamp() COMMENT 'Дата регистраций',
   `lastonline` datetime DEFAULT current_timestamp() COMMENT 'В сети',
   `api_key` varchar(255) NOT NULL,
-  `refresh_token` text DEFAULT NULL
+  `refresh_token` text DEFAULT NULL,
+  `policy_accepted` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Дамп данных таблицы `users`
 --
 
-INSERT INTO `users` (`user_id`, `login`, `password`, `user_type`, `user_name`, `user_phone`, `registereddate`, `lastonline`, `api_key`, `refresh_token`) VALUES
-(1, 'user', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 1', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL),
-(2, 'admin', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'admin', 'Админ', '+77011112233', '2026-02-11 10:20:18', '2026-02-14 19:15:26', '', NULL),
-(3, 'owner', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'owner', 'Бизнесмен 1', '+77025556677', '2026-02-11 10:20:18', '2026-02-14 19:01:42', '', NULL),
-(4, 'user2', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 2', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL),
-(6, 'user3', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 3', '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL);
+INSERT INTO `users` (`user_id`, `login`, `password`, `user_type`, `user_name`, `email`, `google_id`, `user_phone`, `registereddate`, `lastonline`, `api_key`, `refresh_token`, `policy_accepted`) VALUES
+(1, 'user', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 1', NULL, NULL, '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL, 0),
+(2, 'admin', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'admin', 'Админ', NULL, NULL, '+77011112233', '2026-02-11 10:20:18', '2026-02-14 19:15:26', '', NULL, 0),
+(3, 'owner', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'owner', 'Бизнесмен 1', NULL, NULL, '+77025556677', '2026-02-11 10:20:18', '2026-02-14 19:01:42', '', NULL, 0),
+(4, 'user2', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 2', NULL, NULL, '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL, 0),
+(6, 'user3', '$2y$10$7YPtXgOd.MvRPiUZXEQJoOFjzwMnswHOns40R68vSAxoEJrofQwwy', 'user', 'Пайдаланушы 3', NULL, NULL, '+77011112233', '2026-02-06 10:32:26', '2026-02-06 10:32:26', '', NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -528,7 +531,9 @@ ALTER TABLE `tags`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`user_id`),
-  ADD UNIQUE KEY `login` (`login`);
+  ADD UNIQUE KEY `login` (`login`),
+  ADD UNIQUE KEY `idx_email` (`email`),
+  ADD UNIQUE KEY `idx_google_id` (`google_id`);
 
 --
 -- Индексы таблицы `user_devices`

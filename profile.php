@@ -5,9 +5,8 @@ require_once 'headers.php';
 $user = authenticate($pdo);
 $user_id = $user['user_id'];
 
-// --- ОБНОВЛЕНИЕ ПРОФИЛЯ И СМЕНА ПАРОЛЯ (POST) ---
+// --- ОБНОВЛЕНИЕ ПРОФИЛЯ, СМЕНА ПАРОЛЯ, УДАЛЕНИЕ АККАУНТА (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // ... [Остается как было, без изменений, код смены пароля и профиля] ...
     $input = json_decode(file_get_contents('php://input'), true);
     $action = $input['action'] ?? 'update_profile'; 
     
@@ -23,21 +22,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$user_id]);
             $current_hash = $stmt->fetchColumn();
 
+            // Если пароля нет (пользователь зашел через Google)
+            if (empty($current_hash)) response(false, 'Смена пароля недоступна для аккаунтов Google');
             if (!password_verify($old_password, $current_hash)) response(false, 'Неверный текущий пароль');
 
             $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
-            $pdo->prepare("UPDATE users SET password = ?, refresh_token = NULL WHERE user_id = ?")->execute([$new_hash, $user_id]); // Сбрасываем сессии на других устройствах
+            $pdo->prepare("UPDATE users SET password = ?, refresh_token = NULL WHERE user_id = ?")->execute([$new_hash, $user_id]);
 
             response(true, 'Пароль успешно изменен');
         } catch (Exception $e) {
             response(false, 'Ошибка смены пароля: ' . $e->getMessage());
         }
         
+    } elseif ($action === 'delete_account') {
+        // НОВОЕ: Удаление аккаунта (Обязательное требование Google Play / App Store)
+        try {
+            // Удаляем пользователя. В БД уже настроены каскадные удаления (ON DELETE CASCADE),
+            // поэтому его токены устройств, отзывы и избранное удалятся автоматически. 
+            // Владельцем заведений он перестанет быть (owner_id станет NULL).
+            $pdo->prepare("DELETE FROM users WHERE user_id = ?")->execute([$user_id]);
+            response(true, 'Ваш аккаунт и все связанные личные данные успешно удалены');
+        } catch (Exception $e) {
+            log_server_error($e, 'Delete Account API');
+            response(false, 'Ошибка при удалении аккаунта');
+        }
+
     } else {
         $name = isset($input['name']) ? trim($input['name']) : '';
         $phone = isset($input['phone']) ? trim($input['phone']) : '';
         
-        if ($name && $phone) {
+        if ($name) {
             try {
                 $pdo->prepare("UPDATE users SET user_name = ?, user_phone = ? WHERE user_id = ?")->execute([$name, $phone, $user_id]);
                 response(true, 'Профиль обновлен');
@@ -52,19 +66,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- ПОЛУЧЕНИЕ ДАННЫХ И АНАЛИТИКИ С ПАГИНАЦИЕЙ (GET) ---
 else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // ... [Оставляем GET метод как он был у тебя в исходном файле, он отлично написан] ...
     try {
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $limit = 10;
         $offset = ($page - 1) * $limit;
 
-        // 1. Основные данные пользователя (отдаем всегда)
-        $stmt = $pdo->prepare("SELECT user_id, login, user_name, user_phone, user_type, registereddate, lastonline FROM users WHERE user_id = ?");
+        $stmt = $pdo->prepare("SELECT user_id, login, email, user_name, user_phone, user_type, registereddate, lastonline FROM users WHERE user_id = ?");
         $stmt->execute([$user_id]);
         $userData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$userData) response(false, 'Пользователь не найден');
+        if (!$userData) response(false, 'Пользователь не найден', null, ['code' => 404]);
 
-        // 2. Статистика
         $sqlStats = "SELECT 
                         (SELECT COUNT(*) FROM comments WHERE user_id = ?) AS total_reviews,
                         (SELECT COALESCE(ROUND(AVG(rating), 1), 0) FROM comments WHERE user_id = ?) AS avg_rating_given,
@@ -76,7 +89,6 @@ else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmtStats->execute([$user_id, $user_id, $user_id, $user_id, $user_id]);
         $userStats = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
-        // 3. Мои отзывы (С пагинацией)
         $totalReviews = (int)$userStats['total_reviews'];
         $totalPages = ceil($totalReviews / $limit);
 
@@ -97,7 +109,6 @@ else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $rev['status_text'] = ($rev['is_approved'] == 1) ? 'Опубликован' : 'На модерации';
         }
 
-        // Собираем ответ
         $response = [
             'profile' => $userData,
             'analytics' => [

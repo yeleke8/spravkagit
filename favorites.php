@@ -7,29 +7,46 @@ $user_id = $user['user_id'];
 $action = $_GET['action'] ?? '';
 
 try {
-    // --- ПОЛУЧИТЬ СПИСОК ИЗБРАННОГО ---
-    // Используем строгий GET метод
+    // --- ПОЛУЧИТЬ СПИСОК ИЗБРАННОГО С ПАГИНАЦИЕЙ ---
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'list') {
+        
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
+        $offset = ($page - 1) * $limit;
+
+        // Считаем общее количество для пагинации
+        $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM s_favorites WHERE user_id = ?");
+        $stmtCount->execute([$user_id]);
+        $totalItems = $stmtCount->fetchColumn();
+        $totalPages = ceil($totalItems / $limit);
+
+        // Получаем сами данные с учетом лимитов
         $sql = "SELECT p.post_id, p.title, p.address, p.photo, p.rating_avg, p.rating_count 
                 FROM post p 
                 JOIN s_favorites f ON p.post_id = f.post_id 
                 WHERE f.user_id = ? 
-                ORDER BY f.favorites_id DESC";
+                ORDER BY f.favorites_id DESC 
+                LIMIT $limit OFFSET $offset";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$user_id]);
-        $favorites = $stmt->fetchAll();
+        $favorites = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Форматируем фото
         foreach ($favorites as &$item) {
             $item['photo'] = (strpos($item['photo'], 'http') === 0) ? $item['photo'] : $baseUrl . '/' . $item['photo'];
         }
 
-        response(true, 'My Favorites', $favorites);
+        response(true, 'My Favorites', $favorites, [
+            'pagination' => [
+                'total_items' => $totalItems,
+                'total_pages' => $totalPages,
+                'current_page' => $page,
+                'has_more' => $page < $totalPages
+            ]
+        ]);
     } 
     
     // --- ДОБАВИТЬ / УДАЛИТЬ ---
-    // Используем строгий POST метод и читаем данные из JSON тела (Retrofit @Body)
     elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $input = json_decode(file_get_contents('php://input'), true);
         $post_id = isset($input['post_id']) ? (int)$input['post_id'] : 0;
