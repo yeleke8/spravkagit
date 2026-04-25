@@ -282,11 +282,25 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
 
     // GPS рұқсатын тексеру және сұрау
     private fun checkPermissionsAndStart() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        val permissions = mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+        // Если устройство на Android 13 (API 33) и выше, нужно разрешение на уведомления
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        // Проверяем, выданы ли уже разрешения
+        val hasFineLocation = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFineLocation && hasCoarseLocation) {
             viewModel.startLocationUpdates() // Рұқсат бар болса, локацияны қосу
         } else {
-            // Рұқсат жоқ болса, сұрау
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_REQ_CODE)
+            // Запрашиваем сразу все необходимые разрешения
+            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), LOCATION_REQ_CODE)
         }
     }
 
